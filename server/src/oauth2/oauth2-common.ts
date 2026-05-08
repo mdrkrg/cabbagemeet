@@ -86,3 +86,10 @@ export type OAuth2CalendarEvent = {
   start: string; // e.g. "2022-10-23T13:00:00Z"
   end: string; // e.g. "2022-10-23T14:00:00Z"
 };
+
+export function getProviderUrlName(providerType: OAuth2ProviderType): string {
+  if (providerType === OAuth2ProviderType.GENERIC_OIDC) {
+    return "oidc";
+  }
+  return oauth2ProviderNamesMap[providerType].toLowerCase();
+}

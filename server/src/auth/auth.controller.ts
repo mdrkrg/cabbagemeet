@@ -40,9 +40,10 @@ import { SECONDS_PER_MINUTE } from "../dates.utils";
 import OAuth2Service, { OAuth2Reason } from "../oauth2/oauth2.service";
 import {
   OAuth2ProviderType,
-  oauth2ProviderNamesMap,
   OAuth2NotConfiguredError,
+  getProviderUrlName,
 } from "../oauth2/oauth2-common";
+import { capitalize } from "../misc.utils";
 import OAuth2ConsentPostRedirectDto from "../oauth2/oauth2-consent-post-redirect.dto";
 import { UserResponseWithToken } from "../users/user-response";
 import { UserToUserResponse } from "../users/users.controller";
@@ -277,9 +278,9 @@ export class AuthController {
       );
     } catch (err: any) {
       if (err instanceof OAuth2NotConfiguredError) {
-        const providerName = oauth2ProviderNamesMap[providerType];
+        const providerName = getProviderUrlName(providerType);
         throw new HttpException(
-          `${providerName} OAuth2 is not available on this server`,
+          `${capitalize(providerName)} OAuth2 is not available on this server`,
           HttpStatus.SERVICE_UNAVAILABLE,
         );
       }
@@ -369,6 +370,49 @@ export class AuthController {
     return {
       redirect: await this.redirectToOAuth2Provider({
         providerType: OAuth2ProviderType.MICROSOFT,
+        reason: "signup",
+        postRedirect: body.post_redirect,
+        promptConsent: true,
+        nonce: body.nonce,
+      }),
+    };
+  }
+
+  @ApiOperation({
+    summary: "Login with generic OIDC",
+    description:
+      "Returns a URL to an OAuth2 consent page where the client can sign in with a generic OIDC provider",
+    operationId: "loginWithOidc",
+  })
+  @ApiNotFoundResponse({ type: NotFoundResponse })
+  @Post("login-with-oidc")
+  @HttpCode(HttpStatus.OK)
+  async loginWithOidc(@Body() body: OAuth2ConsentPostRedirectDto): Promise<CustomRedirectResponse> {
+    return {
+      redirect: await this.redirectToOAuth2Provider({
+        providerType: OAuth2ProviderType.GENERIC_OIDC,
+        reason: "login",
+        postRedirect: body.post_redirect,
+        promptConsent: false,
+        nonce: body.nonce,
+      }),
+    };
+  }
+
+  @ApiOperation({
+    summary: "Sign up with generic OIDC",
+    description:
+      "Returns a URL to an OAuth2 consent page where the client can sign up with a generic OIDC provider",
+    operationId: "signupWithOidc",
+  })
+  @Post("signup-with-oidc")
+  @HttpCode(HttpStatus.OK)
+  async signupWithOidc(
+    @Body() body: OAuth2ConsentPostRedirectDto,
+  ): Promise<CustomRedirectResponse> {
+    return {
+      redirect: await this.redirectToOAuth2Provider({
+        providerType: OAuth2ProviderType.GENERIC_OIDC,
         reason: "signup",
         postRedirect: body.post_redirect,
         promptConsent: true,

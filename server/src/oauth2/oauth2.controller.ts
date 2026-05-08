@@ -34,6 +34,7 @@ import {
   OAuth2AccountAlreadyLinkedError,
   OAuth2NotAllScopesGrantedError,
   OAuth2NoRefreshTokenError,
+  getProviderUrlName,
 } from "./oauth2-common";
 
 @ApiTags("externalCalendars")
@@ -153,7 +154,7 @@ export class Oauth2Controller {
     stateStr?: string,
     error?: string,
   ) {
-    const providerName = oauth2ProviderNamesMap[providerType].toLowerCase();
+    const providerName = getProviderUrlName(providerType);
     // WARN: We MUST explicitly send a response back to the client (e.g. res.redirect)
     // or else the request will hang forever
     if (error) {
@@ -253,6 +254,23 @@ export class Oauth2Controller {
     );
   }
 
+  @ApiExcludeEndpoint()
+  @Get("redirect/oidc")
+  async oidcRedirect(
+    @Res() res: Response,
+    @Query("code") code?: string,
+    @Query("state") stateStr?: string,
+    @Query("error") error?: string,
+  ) {
+    await this.handleRedirectFromOAuth2Provider(
+      OAuth2ProviderType.GENERIC_OIDC,
+      res,
+      code,
+      stateStr,
+      error,
+    );
+  }
+
   private async confirmLinkOAuth2Account(
     providerType: OAuth2ProviderType,
     user: User,
@@ -324,5 +342,24 @@ export class Oauth2Controller {
     @Body() body: ConfirmLinkAccountDto,
   ): Promise<UserResponse> {
     return this.confirmLinkOAuth2Account(OAuth2ProviderType.MICROSOFT, user, body);
+  }
+
+  @ApiOperation({
+    summary: "Confirm OIDC account linking",
+    description:
+      "Confirm that the OIDC account in the encryptedEntity should be linked to the" +
+      " account of the user who is currently logged in. This should be called after" +
+      " the user is redirected to the /confirm-link-oidc-account page.",
+    operationId: "confirmLinkOidcAccount",
+  })
+  @ApiBearerAuth()
+  @Post("confirm-link-oidc-account")
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtAuthGuard)
+  confirmLinkOidcAccount(
+    @AuthUser() user: User,
+    @Body() body: ConfirmLinkAccountDto,
+  ): Promise<UserResponse> {
+    return this.confirmLinkOAuth2Account(OAuth2ProviderType.GENERIC_OIDC, user, body);
   }
 }

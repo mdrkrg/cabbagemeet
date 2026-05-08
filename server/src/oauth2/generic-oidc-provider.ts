@@ -67,6 +67,10 @@ export default class GenericOidcProvider implements IOAuth2Provider {
         .discover(this.envConfig!.discovery_url)
         .then((config) => {
           this.discovery = config;
+        })
+        .catch((err) => {
+          this.discoveryPromise = null;
+          throw err;
         });
     }
     await this.discoveryPromise;

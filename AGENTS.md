@@ -122,6 +122,26 @@ cabbagemeet/
 - **Email sending is fire-and-forget** (not awaited) in most places.
 - **`class-transformer` boolean bug**: boolean env vars must be passed as strings `'true'`/`'false'`, not actual booleans.
 
+## Commit Message Convention
+
+Use semantic commit messages with conventional commit format:
+
+```
+<type>(<scope>): <short description>
+
+<Optional further information>
+```
+
+Examples:
+
+- `feat(server/oidc): Add PKCE utils and OIDC discovery service`
+- `fix(lint): Resolve all linting issues`
+- `fix(container): Migrate Containerfile to use pnpm`
+
+Common types: `feat`, `fix`, `refactor`, `test`, `docs`, `chore`
+
+Common scopes: `server/oidc`, `server/auth`, `server/meetings`, `client`, `lint`, `container`
+
 ## Env Variables (Key Ones)
 
 | Variable                               | Default        | Notes                             |

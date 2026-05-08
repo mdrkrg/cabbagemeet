@@ -7,6 +7,7 @@ import { DataSource, Repository } from "typeorm";
 import CacherService from "../cacher/cacher.service";
 import ConfigService from "../config/config.service";
 import type { DatabaseType } from "../config/env.validation";
+import { isBooleanStringTrue } from "../config/env.validation";
 import { getPlaceholders, normalizeDBError, UniqueConstraintFailed } from "../database.utils";
 import { getSecondsSinceUnixEpoch } from "../dates.utils";
 import Meeting from "../meetings/meeting.entity";
@@ -34,24 +35,27 @@ import {
 } from "./oauth2-common";
 import GoogleOAuth2Provider from "./google-oauth2-provider";
 import MicrosoftOAuth2Provider from "./microsoft-oauth2-provider";
+import GenericOidcProvider from "./generic-oidc-provider";
 import AbstractOAuth2 from "./abstract-oauth2.entity";
 import MicrosoftOAuth2 from "./microsoft-oauth2.entity";
+import GenericOAuth2 from "./generic-oauth2.entity";
 import MicrosoftCalendarEvents from "./microsoft-calendar-events.entity";
 import MicrosoftCalendarCreatedEvent from "./microsoft-calendar-created-event.entity";
+import OidcDiscoveryService from "./oidc-discovery.service";
 
 // TODO: use truncated exponential backoff
 // See https://developers.google.com/calendar/api/guides/quota
 
 const oauth2EntityClasses: Record<
   OAuth2ProviderType,
-  typeof GoogleOAuth2 | typeof MicrosoftOAuth2
+  typeof GoogleOAuth2 | typeof MicrosoftOAuth2 | typeof GenericOAuth2
 > = {
   [OAuth2ProviderType.GOOGLE]: GoogleOAuth2,
   [OAuth2ProviderType.MICROSOFT]: MicrosoftOAuth2,
+  [OAuth2ProviderType.GENERIC_OIDC]: GenericOAuth2,
 };
-const calendarEventsEntityClasses: Record<
-  OAuth2ProviderType,
-  typeof GoogleCalendarEvents | typeof MicrosoftCalendarEvents
+const calendarEventsEntityClasses: Partial<
+  Record<OAuth2ProviderType, typeof GoogleCalendarEvents | typeof MicrosoftCalendarEvents>
 > = {
   [OAuth2ProviderType.GOOGLE]: GoogleCalendarEvents,
   [OAuth2ProviderType.MICROSOFT]: MicrosoftCalendarEvents,
@@ -153,16 +157,17 @@ export interface IOAuth2Provider {
 export default class OAuth2Service {
   private readonly logger = new Logger(OAuth2Service.name);
   private readonly dbType: DatabaseType;
+  private readonly configService: ConfigService;
   private readonly oauth2Providers: Record<OAuth2ProviderType, IOAuth2Provider>;
   private readonly oauth2Repositories: Record<OAuth2ProviderType, Repository<AbstractOAuth2>>;
-  private readonly createdEventRepositories: Record<
-    OAuth2ProviderType,
-    Repository<AbstractOAuth2CalendarCreatedEvent>
+  private readonly createdEventRepositories: Partial<
+    Record<OAuth2ProviderType, Repository<AbstractOAuth2CalendarCreatedEvent>>
   >;
 
   constructor(
     configService: ConfigService,
     cacherService: CacherService,
+    oidcDiscoveryService: OidcDiscoveryService,
     private meetingsService: MeetingsService,
     private dataSource: DataSource,
     @InjectRepository(User) private usersRepository: Repository<User>,
@@ -178,7 +183,10 @@ export default class OAuth2Service {
     microsoftCalendarEventsRepository: Repository<MicrosoftCalendarEvents>,
     @InjectRepository(MicrosoftCalendarCreatedEvent)
     microsoftCalendarCreatedEventsRepository: Repository<MicrosoftCalendarCreatedEvent>,
+    @InjectRepository(GenericOAuth2)
+    genericOAuth2Repository: Repository<GenericOAuth2>,
   ) {
+    this.configService = configService;
     this.dbType = configService.get("DATABASE_TYPE");
     this.oauth2Providers = {
       [OAuth2ProviderType.GOOGLE]: new GoogleOAuth2Provider(
@@ -192,10 +200,17 @@ export default class OAuth2Service {
         this,
         microsoftCalendarEventsRepository,
       ),
+      [OAuth2ProviderType.GENERIC_OIDC]: new GenericOidcProvider(
+        configService,
+        oidcDiscoveryService,
+        cacherService,
+        this,
+      ),
     };
     this.oauth2Repositories = {
       [OAuth2ProviderType.GOOGLE]: googleOAuth2Repository,
       [OAuth2ProviderType.MICROSOFT]: microsoftOAuth2Repository,
+      [OAuth2ProviderType.GENERIC_OIDC]: genericOAuth2Repository,
     };
     this.createdEventRepositories = {
       [OAuth2ProviderType.GOOGLE]: googleCalendarCreatedEventsRepository,
@@ -253,11 +268,33 @@ export default class OAuth2Service {
   }
 
   providerIsSupported(providerType: OAuth2ProviderType): boolean {
-    return this.oauth2Providers[providerType].isConfigured();
+    if (!this.oauth2Providers[providerType].isConfigured()) return false;
+    return this.isProviderExplicitlyEnabled(providerType);
+  }
+
+  private isProviderExplicitlyEnabled(providerType: OAuth2ProviderType): boolean {
+    if (providerType === OAuth2ProviderType.GOOGLE) {
+      const enabled = this.configService.get("OAUTH2_GOOGLE_ENABLED");
+      if (enabled) return isBooleanStringTrue(enabled);
+      return true;
+    }
+    if (providerType === OAuth2ProviderType.MICROSOFT) {
+      const enabled = this.configService.get("OAUTH2_MICROSOFT_ENABLED");
+      if (enabled) return isBooleanStringTrue(enabled);
+      return true;
+    }
+    if (providerType === OAuth2ProviderType.GENERIC_OIDC) {
+      return isBooleanStringTrue(this.configService.get("OIDC_ENABLED"));
+    }
+    return false;
   }
 
   private getSupportedProviders(): IOAuth2Provider[] {
     return Object.values(this.oauth2Providers).filter((provider) => provider.isConfigured());
+  }
+
+  private getSupportedCalendarProviders(): IOAuth2Provider[] {
+    return this.getSupportedProviders().filter((p) => p.type !== OAuth2ProviderType.GENERIC_OIDC);
   }
 
   async getRequestURL(
@@ -402,7 +439,12 @@ export default class OAuth2Service {
         return {
           type: OIDCLoginResultType.USER_EXISTS_BUT_IS_NOT_LINKED,
           user: userByEmail,
-          pendingOAuth2Entity: this.createPartialOAuth2Entity(userByEmail.ID, data, decodedIDToken),
+          pendingOAuth2Entity: this.createPartialOAuth2Entity(
+            userByEmail.ID,
+            data,
+            decodedIDToken,
+            providerType,
+          ),
         };
       } else {
         return {
@@ -442,14 +484,19 @@ export default class OAuth2Service {
     userID: number,
     data: OIDCResponse,
     decodedIDToken: DecodedIDToken,
+    providerType: OAuth2ProviderType,
   ): Partial<AbstractOAuth2> {
-    return {
+    const entity: Partial<AbstractOAuth2> = {
       UserID: userID,
       Sub: decodedIDToken.sub,
       AccessTokenExpiresAt: this.calculateTokenExpirationTime(data.expires_in),
       AccessToken: data.access_token,
       RefreshToken: data.refresh_token,
     };
+    if (providerType === OAuth2ProviderType.GENERIC_OIDC) {
+      entity.LinkedCalendar = false;
+    }
+    return entity;
   }
 
   async fetchAndStoreUserInfoForSignup(
@@ -508,7 +555,7 @@ export default class OAuth2Service {
         });
         await manager.insert(
           oauth2EntityClasses[provider.type],
-          this.createPartialOAuth2Entity(newUser.ID, data, decodedIDToken),
+          this.createPartialOAuth2Entity(newUser.ID, data, decodedIDToken, provider.type),
         );
       });
       return newUser;
@@ -531,7 +578,9 @@ export default class OAuth2Service {
     this.checkThatNameAndEmailClaimsArePresent(decodedIDToken);
     const repository = this.oauth2Repositories[provider.type];
     try {
-      await repository.insert(this.createPartialOAuth2Entity(userID, data, decodedIDToken));
+      await repository.insert(
+        this.createPartialOAuth2Entity(userID, data, decodedIDToken, provider.type),
+      );
     } catch (err: any) {
       err = normalizeDBError(err as Error, this.dbType);
       if (err instanceof UniqueConstraintFailed) {
@@ -629,7 +678,11 @@ export default class OAuth2Service {
     if (!creds) {
       return;
     }
-    if (!user.PasswordHash && !deletingAccount) {
+    if (
+      !user.PasswordHash &&
+      !deletingAccount &&
+      providerType !== OAuth2ProviderType.GENERIC_OIDC
+    ) {
       // We want to make sure that the user has at least one way to sign in.
       // If they originally signed up via an OAuth2 provider, then we'll delete
       // the calendar data, but keep the OAuth2 token so that they can still sign in.
@@ -790,7 +843,7 @@ export default class OAuth2Service {
       return;
     }
     const results = await Promise.allSettled(
-      this.getSupportedProviders().map((provider) =>
+      this.getSupportedCalendarProviders().map((provider) =>
         this.tryCreateOrUpdateEventsForMeetingForAllRespondents_provider(provider, meeting),
       ),
     );
@@ -958,7 +1011,7 @@ export default class OAuth2Service {
       return;
     }
     const results = await Promise.allSettled(
-      this.getSupportedProviders().map((provider) =>
+      this.getSupportedCalendarProviders().map((provider) =>
         this.tryCreateOrUpdateEventsForMeetingForSingleRespondent_provider(
           provider,
           userID,
@@ -1010,7 +1063,7 @@ export default class OAuth2Service {
 
   async tryDeleteEventsForMeetingForAllRespondents(meetingID: number) {
     const results = await Promise.allSettled(
-      this.getSupportedProviders().map((provider) =>
+      this.getSupportedCalendarProviders().map((provider) =>
         this.tryDeleteEventsForMeeting_provider(provider, meetingID),
       ),
     );
@@ -1048,7 +1101,7 @@ export default class OAuth2Service {
 
   async tryDeleteEventsForMeetingForSingleRespondent(userID: number, meetingID: number) {
     const results = await Promise.allSettled(
-      this.getSupportedProviders().map((provider) =>
+      this.getSupportedCalendarProviders().map((provider) =>
         this.tryDeleteEventsForMeetingForSingleRespondent_provider(provider, userID, meetingID),
       ),
     );

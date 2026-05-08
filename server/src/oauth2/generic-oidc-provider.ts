@@ -85,10 +85,8 @@ export default class GenericOidcProvider implements IOAuth2Provider {
     };
   }
 
-  getStaticOAuth2Config(): OAuth2Config {
-    if (!this.discovery) {
-      throw new Error("OIDC discovery not yet completed");
-    }
+  async getStaticOAuth2Config(): Promise<OAuth2Config> {
+    await this.ensureDiscovery();
     return {
       authzEndpoint: this.discovery.authorization_endpoint,
       tokenEndpoint: this.discovery.token_endpoint,

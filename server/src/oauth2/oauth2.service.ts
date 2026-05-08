@@ -138,7 +138,7 @@ export interface PartialRefreshParams {
 export interface IOAuth2Provider {
   type: OAuth2ProviderType;
   isConfigured(): boolean;
-  getStaticOAuth2Config(): OAuth2Config;
+  getStaticOAuth2Config(): OAuth2Config | Promise<OAuth2Config>;
   getScopesToExpectInResponse(): string[];
   getPartialAuthzQueryParams(): Promise<PartialAuthzQueryParams>;
   getPartialTokenFormParams(serverNonce?: string): Promise<PartialTokenFormParams>;
@@ -304,7 +304,7 @@ export default class OAuth2Service {
     promptConsent: boolean,
   ): Promise<string> {
     const provider = this.getProvider(providerType);
-    const { authzEndpoint, scopes } = provider.getStaticOAuth2Config();
+    const { authzEndpoint, scopes } = await provider.getStaticOAuth2Config();
     const { serverNonce, ...partialParams } = await provider.getPartialAuthzQueryParams();
     if (serverNonce) {
       state.serverNonce = serverNonce;
@@ -332,7 +332,7 @@ export default class OAuth2Service {
   }> {
     if (!provider.isConfigured()) throw new OAuth2NotConfiguredError();
     const partialParams = await provider.getPartialTokenFormParams(state.serverNonce);
-    const { tokenEndpoint } = provider.getStaticOAuth2Config();
+    const { tokenEndpoint } = await provider.getStaticOAuth2Config();
     // See https://developers.google.com/identity/protocols/oauth2/web-server#exchange-authorization-code
     //     https://learn.microsoft.com/en-us/azure/active-directory/develop/v2-oauth2-auth-code-flow#request-an-access-token-with-a-certificate-credential
     const requestBody = this.encodeFormQueryParams({
@@ -357,7 +357,7 @@ export default class OAuth2Service {
     creds: AbstractOAuth2,
   ): Promise<AbstractOAuth2> {
     const partialParams = await provider.getPartialRefreshParams();
-    const { tokenEndpoint } = provider.getStaticOAuth2Config();
+    const { tokenEndpoint } = await provider.getStaticOAuth2Config();
     // See https://developers.google.com/identity/protocols/oauth2/web-server#offline
     //     https://learn.microsoft.com/en-us/graph/auth-v2-user#request
     const requestBody = this.encodeFormQueryParams({
@@ -695,7 +695,7 @@ export default class OAuth2Service {
       });
       return;
     }
-    const { revokeEndpoint } = provider.getStaticOAuth2Config();
+    const { revokeEndpoint } = await provider.getStaticOAuth2Config();
     // Microsoft & Generic OIDC doesn't have a revocation endpoint
     if (revokeEndpoint) {
       // See https://developers.google.com/identity/protocols/oauth2/web-server#tokenrevoke

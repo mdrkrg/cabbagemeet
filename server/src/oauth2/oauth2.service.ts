@@ -204,7 +204,6 @@ export default class OAuth2Service {
         configService,
         oidcDiscoveryService,
         cacherService,
-        this,
       ),
     };
     this.oauth2Repositories = {
@@ -290,7 +289,9 @@ export default class OAuth2Service {
   }
 
   private getSupportedProviders(): IOAuth2Provider[] {
-    return Object.values(this.oauth2Providers).filter((provider) => provider.isConfigured());
+    return Object.values(this.oauth2Providers).filter(
+      (provider) => provider.isConfigured() && this.isProviderExplicitlyEnabled(provider.type),
+    );
   }
 
   private getSupportedCalendarProviders(): IOAuth2Provider[] {
@@ -695,7 +696,7 @@ export default class OAuth2Service {
       return;
     }
     const { revokeEndpoint } = provider.getStaticOAuth2Config();
-    // Microsoft doesn't have a revocation endpoint
+    // Microsoft & Generic OIDC doesn't have a revocation endpoint
     if (revokeEndpoint) {
       // See https://developers.google.com/identity/protocols/oauth2/web-server#tokenrevoke
       await this.request(revokeEndpoint, {

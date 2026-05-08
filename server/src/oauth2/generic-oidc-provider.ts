@@ -5,7 +5,6 @@ import CacherService from "../cacher/cacher.service";
 import { SECONDS_PER_MINUTE } from "../dates.utils";
 import { generatePkceCodeChallenge, generatePkceCodeVerifier } from "./pkce.utils";
 import OidcDiscoveryService, { OIDCDiscovery } from "./oidc-discovery.service";
-import type OAuth2Service from "./oauth2.service";
 import type {
   IOAuth2Provider,
   OAuth2Config,
@@ -41,7 +40,6 @@ export default class GenericOidcProvider implements IOAuth2Provider {
     configService: ConfigService,
     private readonly oidcDiscoveryService: OidcDiscoveryService,
     cacherService: CacherService,
-    private readonly oauth2Service: OAuth2Service,
   ) {
     this.codeVerifierCache = cacherService;
     const client_id = configService.get("OIDC_CLIENT_ID");

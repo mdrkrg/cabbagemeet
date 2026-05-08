@@ -93,3 +93,7 @@ export function getProviderUrlName(providerType: OAuth2ProviderType): string {
   }
   return oauth2ProviderNamesMap[providerType].toLowerCase();
 }
+
+export function getProviderDisplayName(providerType: OAuth2ProviderType): string {
+  return capitalize(getProviderUrlName(providerType));
+}

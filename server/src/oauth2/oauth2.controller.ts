@@ -18,7 +18,7 @@ import { AuthUser } from "../auth/auth-user.decorator";
 import JwtAuthGuard from "../auth/jwt-auth.guard";
 import ConfigService from "../config/config.service";
 import CustomJwtService from "../custom-jwt/custom-jwt.service";
-import { assertIsNever, capitalize, encodeQueryParams } from "../misc.utils";
+import { assertIsNever, encodeQueryParams } from "../misc.utils";
 import UserResponse from "../users/user-response";
 import User from "../users/user.entity";
 import { UserToUserResponse } from "../users/users.controller";
@@ -27,7 +27,6 @@ import AbstractOAuth2 from "./abstract-oauth2.entity";
 import ConfirmLinkAccountDto from "./confirm-link-account.dto";
 import OAuth2Service, { OIDCLoginResultType, OAuth2State } from "./oauth2.service";
 import {
-  oauth2ProviderNamesMap,
   OAuth2ProviderType,
   oauth2Reasons,
   OAuth2NotConfiguredError,
@@ -35,6 +34,7 @@ import {
   OAuth2NotAllScopesGrantedError,
   OAuth2NoRefreshTokenError,
   getProviderUrlName,
+  getProviderDisplayName,
 } from "./oauth2-common";
 
 @ApiTags("externalCalendars")
@@ -298,7 +298,7 @@ export class Oauth2Controller {
       await this.oauth2Service.linkAccountFromConfirmation(providerType, user, oauth2Entity);
     } catch (err: any) {
       if (err instanceof OAuth2AccountAlreadyLinkedError) {
-        const providerName = capitalize(oauth2ProviderNamesMap[providerType]);
+        const providerName = getProviderDisplayName(providerType);
         throw new ConflictException(`This ${providerName} account is already linked`);
       }
       throw err;

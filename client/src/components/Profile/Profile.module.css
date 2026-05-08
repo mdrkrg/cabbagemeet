@@ -9,7 +9,9 @@
   max-width: 100%;
   color: var(--custom-primary);
   border: 1px solid var(--custom-primary);
-  transition: background-color 0.25s, color 0.25s;
+  transition:
+    background-color 0.25s,
+    color 0.25s;
 }
 
 .meetingCard:hover {

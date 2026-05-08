@@ -1,7 +1,7 @@
-import { Injectable } from '@nestjs/common';
-import { DataSource } from 'typeorm';
-import ConfigService from '../config/config.service';
-import { Environment } from '../config/env.validation';
+import { Injectable } from "@nestjs/common";
+import { DataSource } from "typeorm";
+import ConfigService from "../config/config.service";
+import { Environment } from "../config/env.validation";
 
 @Injectable()
 export default class CustomMigrationsService {
@@ -11,7 +11,7 @@ export default class CustomMigrationsService {
     configService: ConfigService,
     private readonly dataSource: DataSource,
   ) {
-    this.nodeEnv = configService.get('NODE_ENV');
+    this.nodeEnv = configService.get("NODE_ENV");
   }
 
   async onModuleInit() {
@@ -20,7 +20,7 @@ export default class CustomMigrationsService {
     // set to true, and that runs _after_ the migrations.
     // Since our custom migrations assume that the tables already exist, we
     // need to delay them until after the "synchronize" step has completed.
-    if (this.nodeEnv === 'development') {
+    if (this.nodeEnv === "development") {
       await this.dataSource.runMigrations();
     }
   }

@@ -1,4 +1,4 @@
-import { DateTime } from 'luxon';
+import { DateTime } from "luxon";
 
 export const SECONDS_PER_MINUTE = 60;
 export const MINUTES_PER_HOUR = 60;
@@ -16,8 +16,8 @@ export function getUTCDateString(date: Date): string {
   const day = date.getUTCDate();
 
   const YYYY = String(year);
-  const MM = String(month).padStart(2, '0');
-  const DD = String(day).padStart(2, '0');
+  const MM = String(month).padStart(2, "0");
+  const DD = String(day).padStart(2, "0");
   return `${YYYY}-${MM}-${DD}`;
 }
 
@@ -41,11 +41,11 @@ export function toISOStringUTC(date: Date): string {
   const minute = date.getUTCMinutes();
 
   const YYYY = String(year);
-  const MM = String(month).padStart(2, '0');
-  const DD = String(day).padStart(2, '0');
-  const HH = String(hour).padStart(2, '0');
-  const mm = String(minute).padStart(2, '0');
-  const ss = '00';
+  const MM = String(month).padStart(2, "0");
+  const DD = String(day).padStart(2, "0");
+  const HH = String(hour).padStart(2, "0");
+  const mm = String(minute).padStart(2, "0");
+  const ss = "00";
   return `${YYYY}-${MM}-${DD}T${HH}:${mm}:${ss}Z`;
 }
 
@@ -53,10 +53,7 @@ export function toISOStringUTCFromDateTimeStr(dateTimeStr: string): string {
   return toISOStringUTC(new Date(dateTimeStr));
 }
 
-export function toISOStringUTCFromDateTimeStrAndTz(
-  dateTimeStr: string,
-  tz: string,
-): string {
+export function toISOStringUTCFromDateTimeStrAndTz(dateTimeStr: string, tz: string): string {
   const date = DateTime.fromISO(dateTimeStr, { zone: tz }).toJSDate();
   return toISOStringUTC(date);
 }
@@ -69,10 +66,7 @@ export function toISOStringUTCFromDateStrAndHourAndTz(
   const [year, month, day] = getYearMonthDayFromDateString(dateStr);
   const hour = Math.floor(hourDecimal);
   const minute = Math.floor((hourDecimal - hour) * 60);
-  const date = DateTime.fromObject(
-    { year, month, day, hour, minute },
-    { zone: ianaTz },
-  ).toJSDate();
+  const date = DateTime.fromObject({ year, month, day, hour, minute }, { zone: ianaTz }).toJSDate();
   return toISOStringUTC(date);
 }
 
@@ -81,8 +75,6 @@ export function toISOStringUTCFromDateStrAndHourAndTz(
  * @param date a date string in YYYY-MM-DD format
  * @returns [year, month, day]
  */
-export function getYearMonthDayFromDateString(
-  date: string,
-): [number, number, number] {
-  return date.split('-').map((s) => parseInt(s)) as [number, number, number];
+export function getYearMonthDayFromDateString(date: string): [number, number, number] {
+  return date.split("-").map((s) => parseInt(s)) as [number, number, number];
 }

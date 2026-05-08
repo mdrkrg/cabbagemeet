@@ -1,19 +1,19 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import type { RootState } from 'app/store';
+import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import type { RootState } from "app/store";
 
 export const emptyApi = createApi({
-  reducerPath: 'api',
+  reducerPath: "api",
   baseQuery: fetchBaseQuery({
-    baseUrl: import.meta.env.VITE_API_BASE_URL || '/',
-    prepareHeaders: (headers, {getState}) => {
+    baseUrl: import.meta.env.VITE_API_BASE_URL || "/",
+    prepareHeaders: (headers, { getState }) => {
       // Adapted from
       // https://github.com/reduxjs/redux-toolkit/blob/master/examples/query/react/authentication/src/app/services/auth.ts
       const token = (getState() as RootState).authentication.token;
-      if (token && !headers.has('authorization')) {
-        headers.set('authorization', `Bearer ${token}`);
+      if (token && !headers.has("authorization")) {
+        headers.set("authorization", `Bearer ${token}`);
       }
       return headers;
     },
   }),
-  endpoints: builder => ({}),
+  endpoints: (builder) => ({}),
 });

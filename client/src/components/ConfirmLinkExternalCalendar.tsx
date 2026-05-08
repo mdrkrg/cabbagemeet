@@ -1,44 +1,45 @@
-import { useEffect, useMemo } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Link } from 'react-router-dom';
-import { useAppSelector } from 'app/hooks';
-import ButtonWithSpinner from 'components/ButtonWithSpinner';
-import GenericSpinner from 'components/GenericSpinner';
-import { useToast } from 'components/Toast';
+import { useEffect, useMemo } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { Link } from "react-router-dom";
+import { useAppSelector } from "app/hooks";
+import ButtonWithSpinner from "components/ButtonWithSpinner";
+import GenericSpinner from "components/GenericSpinner";
+import { useToast } from "components/Toast";
 import {
   useConfirmLinkGoogleAccountMutation,
   useConfirmLinkMicrosoftAccountMutation,
-} from 'slices/api';
-import { selectTokenIsPresent } from 'slices/authentication';
-import { useGetSelfInfoIfTokenIsPresent } from 'utils/auth.hooks';
-import { capitalize } from 'utils/misc.utils';
-import { calendarProductNames, logos, OAuth2Provider } from 'utils/oauth2-common';
-import { getReqErrorMessage } from 'utils/requests.utils';
-import useSetTitle from 'utils/title.hook';
+} from "slices/api";
+import { selectTokenIsPresent } from "slices/authentication";
+import { useGetSelfInfoIfTokenIsPresent } from "utils/auth.hooks";
+import { capitalize } from "utils/misc.utils";
+import { calendarProductNames, logos, OAuth2Provider } from "utils/oauth2-common";
+import { getReqErrorMessage } from "utils/requests.utils";
+import useSetTitle from "utils/title.hook";
 
-const confirmLinkAccountHooks: Record<OAuth2Provider, typeof useConfirmLinkGoogleAccountMutation> = {
-  'google': useConfirmLinkGoogleAccountMutation,
-  'microsoft': useConfirmLinkMicrosoftAccountMutation,
-};
+const confirmLinkAccountHooks: Record<OAuth2Provider, typeof useConfirmLinkGoogleAccountMutation> =
+  {
+    google: useConfirmLinkGoogleAccountMutation,
+    microsoft: useConfirmLinkMicrosoftAccountMutation,
+  };
 
-export default function ConfirmLinkExternalCalendar({provider}: {provider: OAuth2Provider}) {
+export default function ConfirmLinkExternalCalendar({ provider }: { provider: OAuth2Provider }) {
   const capitalizedProvider = useMemo(() => capitalize(provider), [provider]);
   const tokenIsPresent = useAppSelector(selectTokenIsPresent);
-  const {data: userInfo} = useGetSelfInfoIfTokenIsPresent();
+  const { data: userInfo } = useGetSelfInfoIfTokenIsPresent();
   const navigate = useNavigate();
-  const [confirmLinkAccount, {isSuccess, isLoading, error}] = confirmLinkAccountHooks[provider]();
-  const {showToast} = useToast();
+  const [confirmLinkAccount, { isSuccess, isLoading, error }] = confirmLinkAccountHooks[provider]();
+  const { showToast } = useToast();
   const [searchParams] = useSearchParams();
   // The token will be removed from the URL and stored in the Redux store from
   // another hook
-  const token = searchParams.get('token');
-  const postRedirect = searchParams.get('postRedirect');
-  const encryptedEntity = searchParams.get('encryptedEntity');
-  const iv = searchParams.get('iv');
-  const salt = searchParams.get('salt');
-  const tag = searchParams.get('tag');
+  const token = searchParams.get("token");
+  const postRedirect = searchParams.get("postRedirect");
+  const encryptedEntity = searchParams.get("encryptedEntity");
+  const iv = searchParams.get("iv");
+  const salt = searchParams.get("salt");
+  const tag = searchParams.get("tag");
   const requiredParamsArePresent = !!(postRedirect && encryptedEntity && iv && salt && tag);
-  const shouldRedirectToHomePage = !requiredParamsArePresent || (!tokenIsPresent && !token)
+  const shouldRedirectToHomePage = !requiredParamsArePresent || (!tokenIsPresent && !token);
   const calendarProductName = calendarProductNames[provider] ?? capitalizedProvider;
 
   useSetTitle(`Link ${calendarProductName} Calendar`);
@@ -47,7 +48,7 @@ export default function ConfirmLinkExternalCalendar({provider}: {provider: OAuth
     if (isSuccess) {
       showToast({
         msg: `Successfully linked ${capitalizedProvider} account`,
-        msgType: 'success',
+        msgType: "success",
         autoClose: true,
       });
       navigate(postRedirect!);
@@ -56,7 +57,7 @@ export default function ConfirmLinkExternalCalendar({provider}: {provider: OAuth
 
   useEffect(() => {
     if (shouldRedirectToHomePage) {
-      navigate('/');
+      navigate("/");
     }
   }, [shouldRedirectToHomePage, navigate]);
 
@@ -66,31 +67,30 @@ export default function ConfirmLinkExternalCalendar({provider}: {provider: OAuth
   if (!userInfo) {
     return <GenericSpinner />;
   }
-  const onClick = () => confirmLinkAccount({
-    encrypted_entity: encryptedEntity,
-    iv,
-    salt,
-    tag,
-  });
+  const onClick = () =>
+    confirmLinkAccount({
+      encrypted_entity: encryptedEntity,
+      iv,
+      salt,
+      tag,
+    });
   const btnDisabled = isLoading;
   return (
-    <div className="align-self-center" style={{width: 'min(100%, 600px)'}}>
+    <div className="align-self-center" style={{ width: "min(100%, 600px)" }}>
       <div className="d-flex align-items-center justify-content-between">
-        <h3 className="mb-0">
-          Link your {capitalizedProvider} account
-        </h3>
+        <h3 className="mb-0">Link your {capitalizedProvider} account</h3>
         <img
           src={logos[provider]}
           alt={`${capitalizedProvider} Logo`}
-          style={{maxHeight: '1.5em'}}
+          style={{ maxHeight: "1.5em" }}
         />
       </div>
       <hr className="my-4" />
       <p>Welcome back, {userInfo.name}!</p>
       <p>
-        You already have an account on CabbageMeet associated with
-        the email address <strong>{userInfo.email}</strong>.
-        Link your {capitalizedProvider} account to obtain the following benefits:
+        You already have an account on CabbageMeet associated with the email address{" "}
+        <strong>{userInfo.email}</strong>. Link your {capitalizedProvider} account to obtain the
+        following benefits:
       </p>
       <ul>
         <li>Single sign-on with {capitalizedProvider}</li>
@@ -98,15 +98,13 @@ export default function ConfirmLinkExternalCalendar({provider}: {provider: OAuth
         <li>Synchronize your scheduled meetings with {calendarProductName} calendar</li>
       </ul>
       {error && (
-        <p className="text-danger text-center mb-0 mt-4">An error occurred: {getReqErrorMessage(error)}</p>
+        <p className="text-danger text-center mb-0 mt-4">
+          An error occurred: {getReqErrorMessage(error)}
+        </p>
       )}
       <div className="mt-5 d-flex justify-content-between">
         <Link to={postRedirect}>
-          <button
-            type="button"
-            className="btn btn-outline-secondary px-4"
-            disabled={btnDisabled}
-          >
+          <button type="button" className="btn btn-outline-secondary px-4" disabled={btnDisabled}>
             Cancel
           </button>
         </Link>

@@ -44,10 +44,7 @@
   }
 }
 
-.navbar-nav .nav-link:is(
-  .header-link:hover,
-  .header-link_active
- ) {
+.navbar-nav .nav-link:is(.header-link:hover, .header-link_active) {
   color: var(--custom-primary);
 }
 

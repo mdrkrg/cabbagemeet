@@ -1,14 +1,12 @@
-import { Injectable, Logger } from '@nestjs/common';
-import ConfigService from '../config/config.service';
-import { SECONDS_PER_DAY, SECONDS_PER_MINUTE } from '../dates.utils';
-import { sleep } from '../misc.utils';
-import RateLimiterService, {
-  IRateLimiter,
-} from '../rate-limiter/rate-limiter.service';
-import MailerSendMailStrategy from './mailersend-mail-strategy';
-import SMTPMailStrategy from './smtp-mail-strategy';
+import { Injectable, Logger } from "@nestjs/common";
+import ConfigService from "../config/config.service";
+import { SECONDS_PER_DAY, SECONDS_PER_MINUTE } from "../dates.utils";
+import { sleep } from "../misc.utils";
+import RateLimiterService, { IRateLimiter } from "../rate-limiter/rate-limiter.service";
+import MailerSendMailStrategy from "./mailersend-mail-strategy";
+import SMTPMailStrategy from "./smtp-mail-strategy";
 
-const KEY = 'mail';
+const KEY = "mail";
 
 export interface SendParams {
   recipient: {
@@ -29,20 +27,14 @@ export default class MailService {
   private readonly logger = new Logger(MailService.name);
   private readonly rateLimiter: IRateLimiter | undefined;
 
-  constructor(
-    configService: ConfigService,
-    rateLimiterService: RateLimiterService,
-  ) {
-    const dailyLimit = configService.get('EMAIL_DAILY_LIMIT');
+  constructor(configService: ConfigService, rateLimiterService: RateLimiterService) {
+    const dailyLimit = configService.get("EMAIL_DAILY_LIMIT");
     if (dailyLimit) {
-      this.rateLimiter = rateLimiterService.factory(
-        SECONDS_PER_DAY,
-        dailyLimit,
-      );
+      this.rateLimiter = rateLimiterService.factory(SECONDS_PER_DAY, dailyLimit);
     }
-    if (configService.get('MAILERSEND_API_KEY')) {
+    if (configService.get("MAILERSEND_API_KEY")) {
       this.strategy = new MailerSendMailStrategy(configService);
-    } else if (configService.get('SMTP_HOST')) {
+    } else if (configService.get("SMTP_HOST")) {
       this.strategy = new SMTPMailStrategy(configService);
     }
   }
@@ -67,10 +59,7 @@ export default class MailService {
     }
     const MAX_TRIES = 3;
     for (let i = 0; i < MAX_TRIES; i++) {
-      if (
-        !this.rateLimiter ||
-        (await this.rateLimiter.tryAddRequestIfWithinLimits(KEY))
-      ) {
+      if (!this.rateLimiter || (await this.rateLimiter.tryAddRequestIfWithinLimits(KEY))) {
         if (await this.trySendNow(args)) {
           return;
         }
@@ -89,10 +78,7 @@ export default class MailService {
     if (!this.isConfigured()) {
       return false;
     }
-    if (
-      !this.rateLimiter ||
-      (await this.rateLimiter.tryAddRequestIfWithinLimits(KEY))
-    ) {
+    if (!this.rateLimiter || (await this.rateLimiter.tryAddRequestIfWithinLimits(KEY))) {
       return this.trySendNow(args);
     }
     return false;

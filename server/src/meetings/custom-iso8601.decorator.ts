@@ -1,8 +1,4 @@
-import {
-  registerDecorator,
-  ValidationOptions,
-  ValidationArguments,
-} from 'class-validator';
+import { registerDecorator, ValidationOptions, ValidationArguments } from "class-validator";
 
 // NOTE: the following time zones have quarterly offsets:
 // * Nepal (GMT+5:45)
@@ -11,25 +7,21 @@ import {
 
 const pattern = /^\d{4}-\d{2}-\d{2}T\d{2}:(00|15|30|45):00Z$/;
 
-export default function IsCustomISO8601String(
-  validationOptions?: ValidationOptions,
-) {
-  return function (object: Object, propertyName: string) {
+export default function IsCustomISO8601String(validationOptions?: ValidationOptions) {
+  return function (object: object, propertyName: string) {
     registerDecorator({
-      name: 'IsCustomISO8601String',
+      name: "IsCustomISO8601String",
       target: object.constructor,
       propertyName,
-      constraints: ['isCustomISO8601String'],
+      constraints: ["isCustomISO8601String"],
       options: {
-        message: 'invalid date time string',
+        message: "invalid date time string",
         ...validationOptions,
       },
       validator: {
         validate(value: any, args: ValidationArguments) {
           return (
-            typeof value === 'string' &&
-            pattern.test(value) &&
-            !Number.isNaN(Date.parse(value))
+            typeof value === "string" && pattern.test(value) && !Number.isNaN(Date.parse(value))
           );
         },
       },

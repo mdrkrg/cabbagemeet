@@ -1,11 +1,11 @@
-import React, { createContext, useContext, useState, useCallback, useRef, useReducer } from 'react';
-import BootstrapToast from 'react-bootstrap/Toast';
-import type { Variant } from 'react-bootstrap/esm/types';
-import styles from './Toast.module.css';
+import React, { createContext, useContext, useState, useCallback, useRef, useReducer } from "react";
+import BootstrapToast from "react-bootstrap/Toast";
+import type { Variant } from "react-bootstrap/esm/types";
+import styles from "./Toast.module.css";
 
 interface ToastData {
   msg: string;
-  msgType: 'success' | 'failure';
+  msgType: "success" | "failure";
   autoClose?: boolean;
 }
 
@@ -18,13 +18,15 @@ interface ToastMessagesState {
   counter: number;
 }
 
-type ToastMessagesAction = {
-  type: 'add';
-  toastData: ToastData;
-} | {
-  type: 'remove';
-  toastID: string;
-};
+type ToastMessagesAction =
+  | {
+      type: "add";
+      toastData: ToastData;
+    }
+  | {
+      type: "remove";
+      toastID: string;
+    };
 
 interface toastAPIType {
   showToast: (data: ToastData) => void;
@@ -35,10 +37,11 @@ const toastContext = createContext<toastAPIType>({
 });
 
 function Toasts({
-  messages, removeToast,
+  messages,
+  removeToast,
 }: {
-  messages: ToastMessages,
-  removeToast: (toastID: string) => void,
+  messages: ToastMessages;
+  removeToast: (toastID: string) => void;
 }) {
   return (
     <div className={`${styles.toastContainer}`}>
@@ -47,7 +50,7 @@ function Toasts({
         Object.entries(messages)
           .sort(([toastID1], [toastID2]) => Number(toastID2) - Number(toastID1))
           .map(([toastID, toastData]) => (
-            <Toast key={toastID} {...{toastID, toastData, removeToast}} />
+            <Toast key={toastID} {...{ toastID, toastData, removeToast }} />
           ))
       }
     </div>
@@ -55,9 +58,13 @@ function Toasts({
 }
 
 function Toast({
-  toastID, toastData, removeToast,
+  toastID,
+  toastData,
+  removeToast,
 }: {
-  toastID: string, toastData: ToastData, removeToast: (toastID: string) => void,
+  toastID: string;
+  toastData: ToastData;
+  removeToast: (toastID: string) => void;
 }) {
   const [closed, setClosed] = useState(false);
   // We need to use a ref here because the useState setter is asynchronous
@@ -65,10 +72,10 @@ function Toast({
   // read our own write from a previous render
   const autoCloseTimeoutIDRef = useRef(0);
 
-  let bg: Variant = 'primary';
+  let bg: Variant = "primary";
   let className = styles.toast;
-  if (toastData.msgType === 'failure') {
-    bg = 'danger';
+  if (toastData.msgType === "failure") {
+    bg = "danger";
     className += ` ${styles.error}`;
   }
   if (closed) {
@@ -96,21 +103,22 @@ function Toast({
     <BootstrapToast className={className} onClose={onClose} bg={bg}>
       {/* See common.css (couldn't use CSS module due to global Bootstrap CSS names) */}
       <BootstrapToast.Header className="toast-header-no-title"></BootstrapToast.Header>
-      <BootstrapToast.Body>
-        {toastData.msg}
-      </BootstrapToast.Body>
+      <BootstrapToast.Body>{toastData.msg}</BootstrapToast.Body>
     </BootstrapToast>
   );
 }
 
-function toastStateReducer(state: ToastMessagesState, action: ToastMessagesAction): ToastMessagesState {
-  if (action.type === 'add') {
+function toastStateReducer(
+  state: ToastMessagesState,
+  action: ToastMessagesAction,
+): ToastMessagesState {
+  if (action.type === "add") {
     return {
-      data: {...state.data, [state.counter]: action.toastData},
+      data: { ...state.data, [state.counter]: action.toastData },
       counter: state.counter + 1,
     };
-  } else if (action.type === 'remove') {
-    const newData = {...state.data};
+  } else if (action.type === "remove") {
+    const newData = { ...state.data };
     delete newData[action.toastID];
     return {
       data: newData,
@@ -130,16 +138,16 @@ export function ToastProvider({ children }: React.PropsWithChildren<{}>) {
   });
 
   const showToast = useCallback(
-    (toastData: ToastData) => toastDispatch({type: 'add', toastData}),
-    []
+    (toastData: ToastData) => toastDispatch({ type: "add", toastData }),
+    [],
   );
   const removeToast = useCallback(
-    (toastID: string) => toastDispatch({type: 'remove', toastID}),
-    []
+    (toastID: string) => toastDispatch({ type: "remove", toastID }),
+    [],
   );
 
   return (
-    <toastContext.Provider value={{showToast}}>
+    <toastContext.Provider value={{ showToast }}>
       {children}
       <Toasts messages={toastState.data} removeToast={removeToast} />
     </toastContext.Provider>

@@ -1,15 +1,15 @@
-import React, { useContext, useEffect, useRef, useState } from 'react';
-import Form from 'react-bootstrap/Form';
-import { Link, useNavigate } from 'react-router-dom';
-import BottomOverlay from 'components/BottomOverlay';
-import ButtonWithSpinner from 'components/ButtonWithSpinner';
-import { HistoryContext } from 'components/HistoryProvider';
-import OAuth2ProviderButtons from 'components/OAuth2ProviderButtons';
-import { useLoginMutation } from 'slices/api';
+import React, { useContext, useEffect, useRef, useState } from "react";
+import Form from "react-bootstrap/Form";
+import { Link, useNavigate } from "react-router-dom";
+import BottomOverlay from "components/BottomOverlay";
+import ButtonWithSpinner from "components/ButtonWithSpinner";
+import { HistoryContext } from "components/HistoryProvider";
+import OAuth2ProviderButtons from "components/OAuth2ProviderButtons";
+import { useLoginMutation } from "slices/api";
 import { getReqErrorMessage, useMutationWithPersistentError } from "utils/requests.utils";
-import styles from './Login.module.css';
-import useSetTitle from 'utils/title.hook';
-import WaitForServerInfo from './WaitForServerInfo';
+import styles from "./Login.module.css";
+import useSetTitle from "utils/title.hook";
+import WaitForServerInfo from "./WaitForServerInfo";
 
 // TODO: reduce code duplication with Signup.tsx
 
@@ -21,17 +21,18 @@ export default function Login() {
       </div>
     </WaitForServerInfo>
   );
-};
+}
 
 function LoginForm() {
   const [validated, setValidated] = useState(false);
   const navigate = useNavigate();
-  const [login, {isUninitialized, isLoading, isSuccess, isError, error}] = useMutationWithPersistentError(useLoginMutation);
+  const [login, { isUninitialized, isLoading, isSuccess, isError, error }] =
+    useMutationWithPersistentError(useLoginMutation);
   const emailRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
-  const {lastNonAuthPath} = useContext(HistoryContext);
+  const { lastNonAuthPath } = useContext(HistoryContext);
   // Ref is used to avoid triggering a useEffect hook twice
-  const lastNonAuthPathRef = useRef('/');
+  const lastNonAuthPathRef = useRef("/");
   let onSubmit: React.FormEventHandler<HTMLFormElement> | undefined;
   const submitBtnDisabled = isLoading;
   if (isUninitialized || isError) {
@@ -49,7 +50,7 @@ function LoginForm() {
     };
   }
 
-  useSetTitle('Login');
+  useSetTitle("Login");
 
   useEffect(() => {
     lastNonAuthPathRef.current = lastNonAuthPath;
@@ -62,7 +63,7 @@ function LoginForm() {
   }, [isSuccess, navigate]);
 
   return (
-    <Form noValidate className={styles.loginForm} {...{validated, onSubmit}}>
+    <Form noValidate className={styles.loginForm} {...{ validated, onSubmit }}>
       <h4 className="mb-5">Login</h4>
       <OAuth2ProviderButtons reason="login" />
       <Form.Group controlId="login-form-email">
@@ -81,7 +82,11 @@ function LoginForm() {
       <Form.Group controlId="login-form-password" className="mt-5">
         <div className="d-flex align-items-center justify-content-between mb-2">
           <Form.Label className="mb-0">Password</Form.Label>
-          <Link to="/forgot-password" className={`custom-link ${styles.forgotPasswordLink}`} tabIndex={-1}>
+          <Link
+            to="/forgot-password"
+            className={`custom-link ${styles.forgotPasswordLink}`}
+            tabIndex={-1}
+          >
             Forgot your password?
           </Link>
         </div>
@@ -92,9 +97,7 @@ function LoginForm() {
           className="form-text-input"
           ref={passwordRef}
         />
-        <Form.Control.Feedback type="invalid">
-          Please enter your password.
-        </Form.Control.Feedback>
+        <Form.Control.Feedback type="invalid">Please enter your password.</Form.Control.Feedback>
       </Form.Group>
       {error && (
         <p className="text-danger text-center mb-0 mt-3">
@@ -106,30 +109,25 @@ function LoginForm() {
   );
 }
 
-function SignUpOrLogin({ disabled } : { disabled: boolean }) {
+function SignUpOrLogin({ disabled }: { disabled: boolean }) {
   return (
     <>
       <div className="d-none d-md-flex align-items-center justify-content-between mt-5">
         <Link to="/signup" className={`custom-link ${styles.dontHaveAccountLink}`}>
           Don't have an account yet?
         </Link>
-        <ButtonWithSpinner
-          type="submit"
-          className="btn btn-outline-primary"
-          isLoading={disabled}
-        >
+        <ButtonWithSpinner type="submit" className="btn btn-outline-primary" isLoading={disabled}>
           Log in
         </ButtonWithSpinner>
       </div>
       <BottomOverlay>
-        <Link to="/signup" className={`custom-link custom-link-inverted ${styles.dontHaveAccountLink}`}>
-        Don't have an account yet?
-        </Link>
-        <ButtonWithSpinner
-          type="submit"
-          className="btn btn-light ms-auto"
-          isLoading={disabled}
+        <Link
+          to="/signup"
+          className={`custom-link custom-link-inverted ${styles.dontHaveAccountLink}`}
         >
+          Don't have an account yet?
+        </Link>
+        <ButtonWithSpinner type="submit" className="btn btn-light ms-auto" isLoading={disabled}>
           Log in
         </ButtonWithSpinner>
       </BottomOverlay>

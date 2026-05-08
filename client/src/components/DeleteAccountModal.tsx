@@ -6,20 +6,23 @@ import { useDeleteUserMutation } from "slices/api";
 import { useMutationWithPersistentError } from "utils/requests.utils";
 
 export default function DeleteAccountModal({
-  show, setShow
+  show,
+  setShow,
 }: {
-  show: boolean, setShow: (val: boolean) => void
+  show: boolean;
+  setShow: (val: boolean) => void;
 }) {
-  const [deleteAccount, {isSuccess, isLoading, error, reset}] = useMutationWithPersistentError(useDeleteUserMutation);
+  const [deleteAccount, { isSuccess, isLoading, error, reset }] =
+    useMutationWithPersistentError(useDeleteUserMutation);
   const dispatch = useAppDispatch();
-  const {showToast} = useToast();
+  const { showToast } = useToast();
   const onDeleteClick = () => deleteAccount();
 
   useEffect(() => {
     if (isSuccess) {
       showToast({
-        msg: 'Successfully deleted account',
-        msgType: 'success',
+        msg: "Successfully deleted account",
+        msgType: "success",
         autoClose: true,
       });
       // The user will automatically get redirected to the homepage when the
@@ -40,4 +43,4 @@ export default function DeleteAccountModal({
       reset={reset}
     />
   );
-};
+}

@@ -41,7 +41,7 @@
     "msw": "^0.49.2",
     "typescript": "^5.4.0",
     "vite": "catalog:",
-    "vitest": "catalog:",
-    "vite-plus": "catalog:"
+    "vite-plus": "catalog:",
+    "vitest": "catalog:"
   }
 }

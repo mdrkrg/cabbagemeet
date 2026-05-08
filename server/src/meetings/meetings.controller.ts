@@ -17,18 +17,18 @@ import {
   Put,
   UnauthorizedException,
   UseGuards,
-} from '@nestjs/common';
-import ConfigService from '../config/config.service';
-import { AuthUser, MaybeAuthUser } from '../auth/auth-user.decorator';
-import JwtAuthGuard from '../auth/jwt-auth.guard';
-import OptionalJwtAuthGuard from '../auth/optional-jwt-auth.guard';
-import User from '../users/user.entity';
-import CreateMeetingDto from './create-meeting.dto';
-import MeetingResponse from './meeting-response';
-import MeetingRespondent from './meeting-respondent.entity';
-import Meeting from './meeting.entity';
-import MeetingsService from './meetings.service';
-import { NoSuchMeetingError, NoSuchRespondentError } from './meetings.utils';
+} from "@nestjs/common";
+import ConfigService from "../config/config.service";
+import { AuthUser, MaybeAuthUser } from "../auth/auth-user.decorator";
+import JwtAuthGuard from "../auth/jwt-auth.guard";
+import OptionalJwtAuthGuard from "../auth/optional-jwt-auth.guard";
+import User from "../users/user.entity";
+import CreateMeetingDto from "./create-meeting.dto";
+import MeetingResponse from "./meeting-response";
+import MeetingRespondent from "./meeting-respondent.entity";
+import Meeting from "./meeting.entity";
+import MeetingsService from "./meetings.service";
+import { NoSuchMeetingError, NoSuchRespondentError } from "./meetings.utils";
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
@@ -36,33 +36,22 @@ import {
   ApiOperation,
   ApiTags,
   ApiForbiddenResponse,
-} from '@nestjs/swagger';
-import {
-  BadRequestResponse,
-  NotFoundResponse,
-  ForbiddenResponse,
-} from '../common-responses';
-import {
-  oneYearFromNowDateString,
-  SECONDS_PER_HOUR,
-} from '../dates.utils';
-import { assert } from '../misc.utils';
-import RateLimiterService, {
-  IRateLimiter,
-} from '../rate-limiter/rate-limiter.service';
-import PutRespondentDto from './put-respondent.dto';
-import AddGuestRespondentDto from './add-guest-respondent.dto';
-import EditMeetingDto from './edit-meeting.dto';
-import ScheduleMeetingDto from './schedule-meeting.dto';
-import type MeetingShortResponse from './meeting-short-response';
+} from "@nestjs/swagger";
+import { BadRequestResponse, NotFoundResponse, ForbiddenResponse } from "../common-responses";
+import { oneYearFromNowDateString, SECONDS_PER_HOUR } from "../dates.utils";
+import { assert } from "../misc.utils";
+import RateLimiterService, { IRateLimiter } from "../rate-limiter/rate-limiter.service";
+import PutRespondentDto from "./put-respondent.dto";
+import AddGuestRespondentDto from "./add-guest-respondent.dto";
+import EditMeetingDto from "./edit-meeting.dto";
+import ScheduleMeetingDto from "./schedule-meeting.dto";
+import type MeetingShortResponse from "./meeting-short-response";
 
 const modifyMeetingAuthzDoc =
-  'If the meeting was created by a registed user, then ' +
-  'the client must be logged in as that user.';
+  "If the meeting was created by a registed user, then " +
+  "the client must be logged in as that user.";
 
-export function meetingToMeetingShortResponse(
-  meeting: Meeting,
-): MeetingShortResponse {
+export function meetingToMeetingShortResponse(meeting: Meeting): MeetingShortResponse {
   const response: MeetingShortResponse = {
     meetingID: meeting.Slug,
     name: meeting.Name,
@@ -79,15 +68,12 @@ export function meetingToMeetingShortResponse(
   return response;
 }
 
-function meetingToMeetingResponse(
-  meeting: Meeting,
-  callingUser: User | null,
-): MeetingResponse {
+function meetingToMeetingResponse(meeting: Meeting, callingUser: User | null): MeetingResponse {
   const response: MeetingResponse = {
     ...meetingToMeetingShortResponse(meeting),
     respondents: meeting.Respondents.map((respondent) => {
       const name = respondent.User?.Name ?? respondent.GuestName;
-      assert(name, 'respondent name was not filled');
+      assert(name, "respondent name was not filled");
       return {
         respondentID: respondent.RespondentID,
         name,
@@ -106,26 +92,24 @@ function meetingToMeetingResponse(
   return response;
 }
 
-function meetingDtoToMeetingEntity(
-  body: Partial<CreateMeetingDto>,
-): Partial<Meeting> {
+function meetingDtoToMeetingEntity(body: Partial<CreateMeetingDto>): Partial<Meeting> {
   const meeting: Partial<Meeting> = {};
-  if (body.hasOwnProperty('name')) {
+  if (body.hasOwnProperty("name")) {
     meeting.Name = body.name;
   }
-  if (body.hasOwnProperty('about')) {
+  if (body.hasOwnProperty("about")) {
     meeting.About = body.about;
   }
-  if (body.hasOwnProperty('timezone')) {
+  if (body.hasOwnProperty("timezone")) {
     meeting.Timezone = body.timezone;
   }
-  if (body.hasOwnProperty('minStartHour')) {
+  if (body.hasOwnProperty("minStartHour")) {
     meeting.MinStartHour = body.minStartHour;
   }
-  if (body.hasOwnProperty('maxEndHour')) {
+  if (body.hasOwnProperty("maxEndHour")) {
     meeting.MaxEndHour = body.maxEndHour;
   }
-  if (body.hasOwnProperty('tentativeDates')) {
+  if (body.hasOwnProperty("tentativeDates")) {
     meeting.TentativeDates = body.tentativeDates.sort();
   }
   return meeting;
@@ -146,8 +130,8 @@ function convertMeetingServiceError(err: Error): Error {
   return err;
 }
 
-@ApiTags('meetings')
-@Controller('meetings')
+@ApiTags("meetings")
+@Controller("meetings")
 export class MeetingsController {
   private meetingCreationRateLimiter: IRateLimiter | undefined;
 
@@ -156,9 +140,7 @@ export class MeetingsController {
     configService: ConfigService,
     rateLimiterService: RateLimiterService,
   ) {
-    const meetingCreationLimit = configService.get(
-      'HOURLY_MEETING_CREATION_LIMIT_PER_IP',
-    );
+    const meetingCreationLimit = configService.get("HOURLY_MEETING_CREATION_LIMIT_PER_IP");
     if (meetingCreationLimit !== 0) {
       this.meetingCreationRateLimiter = rateLimiterService.factory(
         SECONDS_PER_HOUR,
@@ -171,15 +153,12 @@ export class MeetingsController {
     respondentID: number,
     maybeUser: User | null,
   ): Promise<MeetingRespondent> {
-    const existingRespondent = await this.meetingsService.getRespondent(
-      respondentID,
-    );
+    const existingRespondent = await this.meetingsService.getRespondent(respondentID);
     if (!existingRespondent) {
       throw new NoSuchRespondentError();
     }
     if (existingRespondent.UserID) {
-      const errorMessage =
-        'You must be logged in as this user to modify their availabilities';
+      const errorMessage = "You must be logged in as this user to modify their availabilities";
       if (!maybeUser) {
         throw new UnauthorizedException(errorMessage);
       } else if (maybeUser.ID !== existingRespondent.UserID) {
@@ -194,9 +173,7 @@ export class MeetingsController {
     maybeUser: User | null,
     allowIfCreatedByGuest = false,
   ) {
-    const meeting = await this.meetingsService.getMeetingWithRespondentsBySlug(
-      meetingSlug,
-    );
+    const meeting = await this.meetingsService.getMeetingWithRespondentsBySlug(meetingSlug);
     if (!meeting) {
       throw new NotFoundException();
     }
@@ -204,25 +181,21 @@ export class MeetingsController {
       return meeting;
     }
     if (!maybeUser) {
-      throw new UnauthorizedException(
-        'You must be logged in to edit this meeting',
-      );
+      throw new UnauthorizedException("You must be logged in to edit this meeting");
     }
     if (meeting.CreatorID && maybeUser.ID !== meeting.CreatorID) {
-      throw new ForbiddenException(
-        'You must be logged in as the creator of this meeting.',
-      );
+      throw new ForbiddenException("You must be logged in as the creator of this meeting.");
     }
     return meeting;
   }
 
   @ApiOperation({
-    summary: 'Create a meeting',
+    summary: "Create a meeting",
     description:
-      'Create a new meeting. If the client is authenticated when executing this request,' +
+      "Create a new meeting. If the client is authenticated when executing this request," +
       " they will be registered as the meeting's creator. Otherwise, the meeting will" +
-      ' have no creator.',
-    operationId: 'createMeeting',
+      " have no creator.",
+    operationId: "createMeeting",
   })
   @ApiBadRequestResponse({ type: BadRequestResponse })
   @Post()
@@ -236,19 +209,16 @@ export class MeetingsController {
       this.meetingCreationRateLimiter &&
       !(await this.meetingCreationRateLimiter.tryAddRequestIfWithinLimits(ip))
     ) {
-      throw new HttpException(
-        'Too many requests',
-        HttpStatus.TOO_MANY_REQUESTS,
-      );
+      throw new HttpException("Too many requests", HttpStatus.TOO_MANY_REQUESTS);
     }
     if (tentativeDatesAreOutOfRange(body.tentativeDates)) {
-      throw new BadRequestException('Dates are out of the acceptable range');
+      throw new BadRequestException("Dates are out of the acceptable range");
     }
     const partialMeeting = meetingDtoToMeetingEntity(body);
     if (maybeUser) {
       partialMeeting.CreatorID = maybeUser.ID;
     }
-    partialMeeting.About ??= '';
+    partialMeeting.About ??= "";
     const meeting = await this.meetingsService.createMeeting(partialMeeting);
     // Normally we would do a left join to get the respondents
     // Since we just created the meeting, this field will be undefined
@@ -257,21 +227,19 @@ export class MeetingsController {
   }
 
   @ApiOperation({
-    summary: 'Get a meeting',
-    description: 'Retrieve the information about a meeting.',
-    operationId: 'getMeeting',
+    summary: "Get a meeting",
+    description: "Retrieve the information about a meeting.",
+    operationId: "getMeeting",
   })
   @ApiBadRequestResponse({ type: BadRequestResponse })
   @ApiNotFoundResponse({ type: NotFoundResponse })
-  @Get(':id')
+  @Get(":id")
   @UseGuards(OptionalJwtAuthGuard)
   async getMeeting(
-    @Param('id') meetingSlug: string,
+    @Param("id") meetingSlug: string,
     @MaybeAuthUser() maybeUser: User | null,
   ): Promise<MeetingResponse> {
-    const meeting = await this.meetingsService.getMeetingWithRespondentsBySlug(
-      meetingSlug,
-    );
+    const meeting = await this.meetingsService.getMeetingWithRespondentsBySlug(meetingSlug);
     if (!meeting) {
       throw new NotFoundException();
     }
@@ -279,17 +247,17 @@ export class MeetingsController {
   }
 
   @ApiOperation({
-    summary: 'Edit a meeting',
-    description: 'Edit a meeting. ' + modifyMeetingAuthzDoc,
-    operationId: 'editMeeting',
+    summary: "Edit a meeting",
+    description: "Edit a meeting. " + modifyMeetingAuthzDoc,
+    operationId: "editMeeting",
   })
   @ApiBadRequestResponse({ type: BadRequestResponse })
   @ApiNotFoundResponse({ type: NotFoundResponse })
   @ApiForbiddenResponse({ type: ForbiddenResponse })
-  @Patch(':id')
+  @Patch(":id")
   @UseGuards(OptionalJwtAuthGuard)
   async editMeeting(
-    @Param('id') meetingSlug: string,
+    @Param("id") meetingSlug: string,
     @Body() body: EditMeetingDto,
     @MaybeAuthUser() maybeUser: User | null,
   ): Promise<MeetingResponse> {
@@ -299,29 +267,29 @@ export class MeetingsController {
     );
     const partialUpdate = meetingDtoToMeetingEntity(body);
     if (Object.keys(partialUpdate).length === 0) {
-      throw new BadRequestException('At least one property must be specified');
+      throw new BadRequestException("At least one property must be specified");
     }
     await this.meetingsService.editMeeting(meeting, partialUpdate);
     return meetingToMeetingResponse(meeting, maybeUser);
   }
 
   @ApiOperation({
-    summary: 'Schedule a meeting',
-    description: 'Schedule a meeting. ' + modifyMeetingAuthzDoc,
-    operationId: 'scheduleMeeting',
+    summary: "Schedule a meeting",
+    description: "Schedule a meeting. " + modifyMeetingAuthzDoc,
+    operationId: "scheduleMeeting",
   })
   @ApiBadRequestResponse({ type: BadRequestResponse })
   @ApiNotFoundResponse({ type: NotFoundResponse })
   @ApiForbiddenResponse({ type: ForbiddenResponse })
-  @Put(':id/schedule')
+  @Put(":id/schedule")
   @UseGuards(OptionalJwtAuthGuard)
   async scheduleMeeting(
-    @Param('id') meetingSlug: string,
+    @Param("id") meetingSlug: string,
     @Body() body: ScheduleMeetingDto,
     @MaybeAuthUser() maybeUser: User | null,
   ): Promise<MeetingResponse> {
     if (body.endDateTime <= body.startDateTime) {
-      throw new BadRequestException('end time must be greater than start time');
+      throw new BadRequestException("end time must be greater than start time");
     }
     const meeting = await this.checkIfMeetingExistsAndClientIsAllowedToModifyIt(
       meetingSlug,
@@ -338,16 +306,16 @@ export class MeetingsController {
   }
 
   @ApiOperation({
-    summary: 'Unschedule a meeting',
-    description: 'Unschedule a meeting. ' + modifyMeetingAuthzDoc,
-    operationId: 'unscheduleMeeting',
+    summary: "Unschedule a meeting",
+    description: "Unschedule a meeting. " + modifyMeetingAuthzDoc,
+    operationId: "unscheduleMeeting",
   })
   @ApiNotFoundResponse({ type: NotFoundResponse })
   @ApiForbiddenResponse({ type: ForbiddenResponse })
-  @Delete(':id/schedule')
+  @Delete(":id/schedule")
   @UseGuards(OptionalJwtAuthGuard)
   async unscheduleMeeting(
-    @Param('id') meetingSlug: string,
+    @Param("id") meetingSlug: string,
     @MaybeAuthUser() maybeUser: User | null,
   ): Promise<MeetingResponse> {
     const meeting = await this.checkIfMeetingExistsAndClientIsAllowedToModifyIt(
@@ -360,34 +328,31 @@ export class MeetingsController {
   }
 
   @ApiOperation({
-    summary: 'Delete a meeting',
-    description: 'Delete a meeting. ' + modifyMeetingAuthzDoc,
-    operationId: 'deleteMeeting',
+    summary: "Delete a meeting",
+    description: "Delete a meeting. " + modifyMeetingAuthzDoc,
+    operationId: "deleteMeeting",
   })
   @ApiNotFoundResponse({ type: NotFoundResponse })
   @ApiForbiddenResponse({ type: ForbiddenResponse })
-  @Delete(':id')
+  @Delete(":id")
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(OptionalJwtAuthGuard)
   async deleteMeeting(
-    @Param('id') meetingSlug: string,
+    @Param("id") meetingSlug: string,
     @MaybeAuthUser() maybeUser: User | null,
   ): Promise<void> {
-    await this.checkIfMeetingExistsAndClientIsAllowedToModifyIt(
-      meetingSlug,
-      maybeUser,
-    );
+    await this.checkIfMeetingExistsAndClientIsAllowedToModifyIt(meetingSlug, maybeUser);
     await this.meetingsService.deleteMeeting(meetingSlug);
   }
 
   @ApiOperation({
-    summary: 'Add guest availabilities',
-    description: 'Add the meeting availabilities for a guest user.',
-    operationId: 'addGuestRespondent',
+    summary: "Add guest availabilities",
+    description: "Add the meeting availabilities for a guest user.",
+    operationId: "addGuestRespondent",
   })
-  @Post(':id/respondents/guest')
+  @Post(":id/respondents/guest")
   async addGuestRespondent(
-    @Param('id') meetingSlug: string,
+    @Param("id") meetingSlug: string,
     @Body() body: AddGuestRespondentDto,
   ): Promise<MeetingResponse> {
     try {
@@ -404,17 +369,16 @@ export class MeetingsController {
   }
 
   @ApiOperation({
-    summary: 'Add or update own availabilities',
-    description:
-      'Add or update the meeting availabilities of the user who is currently logged in.',
-    operationId: 'putSelfRespondent',
+    summary: "Add or update own availabilities",
+    description: "Add or update the meeting availabilities of the user who is currently logged in.",
+    operationId: "putSelfRespondent",
   })
   @ApiForbiddenResponse({ type: ForbiddenResponse })
   @ApiBearerAuth()
-  @Put(':id/respondents/me')
+  @Put(":id/respondents/me")
   @UseGuards(JwtAuthGuard)
   async putSelfRespondent(
-    @Param('id') meetingSlug: string,
+    @Param("id") meetingSlug: string,
     @AuthUser() user: User,
     @Body() body: PutRespondentDto,
   ): Promise<MeetingResponse> {
@@ -431,26 +395,23 @@ export class MeetingsController {
   }
 
   @ApiOperation({
-    summary: 'Update availabilities',
+    summary: "Update availabilities",
     description:
-      'Update the meeting availabilities of an existing respondent.<br><br>' +
-      'If the respondent is a registered user, then the client must be logged in as that user.',
-    operationId: 'updateAvailabilities',
+      "Update the meeting availabilities of an existing respondent.<br><br>" +
+      "If the respondent is a registered user, then the client must be logged in as that user.",
+    operationId: "updateAvailabilities",
   })
   @ApiForbiddenResponse({ type: ForbiddenResponse })
-  @Put(':id/respondents/:respondentID')
+  @Put(":id/respondents/:respondentID")
   @UseGuards(OptionalJwtAuthGuard)
   async updateRespondent(
-    @Param('id') meetingSlug: string,
-    @Param('respondentID', ParseIntPipe) respondentID: number,
+    @Param("id") meetingSlug: string,
+    @Param("respondentID", ParseIntPipe) respondentID: number,
     @MaybeAuthUser() maybeUser: User | null,
     @Body() body: PutRespondentDto,
   ): Promise<MeetingResponse> {
     try {
-      await this.checkIfRespondentExistsAndClientIsAllowedToModifyThem(
-        respondentID,
-        maybeUser,
-      );
+      await this.checkIfRespondentExistsAndClientIsAllowedToModifyThem(respondentID, maybeUser);
       const updatedMeeting = await this.meetingsService.updateRespondent(
         respondentID,
         meetingSlug,
@@ -463,28 +424,25 @@ export class MeetingsController {
   }
 
   @ApiOperation({
-    summary: 'Delete a respondent',
+    summary: "Delete a respondent",
     description:
-      'Remove a respondent from a meeting.<br><br>' +
-      'If the respondent is a registered user, then the client must be logged in as that user.',
-    operationId: 'deleteRespondent',
+      "Remove a respondent from a meeting.<br><br>" +
+      "If the respondent is a registered user, then the client must be logged in as that user.",
+    operationId: "deleteRespondent",
   })
-  @Delete(':id/respondents/:respondentID')
+  @Delete(":id/respondents/:respondentID")
   @UseGuards(OptionalJwtAuthGuard)
   async deleteRespondent(
-    @Param('id') meetingSlug: string,
-    @Param('respondentID', ParseIntPipe) respondentID: number,
+    @Param("id") meetingSlug: string,
+    @Param("respondentID", ParseIntPipe) respondentID: number,
     @MaybeAuthUser() maybeUser: User | null,
   ): Promise<MeetingResponse> {
     try {
-      const respondent =
-        await this.checkIfRespondentExistsAndClientIsAllowedToModifyThem(
-          respondentID,
-          maybeUser,
-        );
-      const updatedMeeting = await this.meetingsService.deleteRespondent(
-        respondent,
+      const respondent = await this.checkIfRespondentExistsAndClientIsAllowedToModifyThem(
+        respondentID,
+        maybeUser,
       );
+      const updatedMeeting = await this.meetingsService.deleteRespondent(respondent);
       return meetingToMeetingResponse(updatedMeeting, maybeUser);
     } catch (err) {
       throw convertMeetingServiceError(err as Error);

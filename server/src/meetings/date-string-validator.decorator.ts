@@ -1,30 +1,22 @@
-import {
-  registerDecorator,
-  ValidationOptions,
-  ValidationArguments,
-} from 'class-validator';
+import { registerDecorator, ValidationOptions, ValidationArguments } from "class-validator";
 
 const pattern = /^\d{4}-\d{2}-\d{2}$/;
 
-export default function IsOnlyDateString(
-  validationOptions?: ValidationOptions,
-) {
-  return function (object: Object, propertyName: string) {
+export default function IsOnlyDateString(validationOptions?: ValidationOptions) {
+  return function (object: object, propertyName: string) {
     registerDecorator({
-      name: 'IsOnlyDateString',
+      name: "IsOnlyDateString",
       target: object.constructor,
       propertyName,
-      constraints: ['isOnlyDateString'],
+      constraints: ["isOnlyDateString"],
       options: {
-        message: 'invalid date string',
+        message: "invalid date string",
         ...validationOptions,
       },
       validator: {
         validate(value: any, args: ValidationArguments) {
           return (
-            typeof value === 'string' &&
-            pattern.test(value) &&
-            !Number.isNaN(Date.parse(value))
+            typeof value === "string" && pattern.test(value) && !Number.isNaN(Date.parse(value))
           );
         },
       },

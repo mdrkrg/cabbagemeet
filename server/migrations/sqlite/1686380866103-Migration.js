@@ -2,10 +2,10 @@ const { MigrationInterface, QueryRunner } = require("typeorm");
 const {
   latestTentativeOrScheduledDateExpr,
   latestTentativeOrScheduledDateIndexName,
-} = require('../../src/custom-migrations/sqlite/sqlite-migration-constants');
+} = require("../../src/custom-migrations/sqlite/sqlite-migration-constants");
 
 module.exports = class Migration1686380866103 {
-  name = 'Migration1686380866103';
+  name = "Migration1686380866103";
 
   // Note: TypeORM will automatically run `PRAGMA foreign_keys=off` before
   // starting the transaction for a migration, and will run
@@ -45,10 +45,12 @@ module.exports = class Migration1686380866103 {
     await queryRunner.query(
       `CREATE INDEX ${latestTentativeOrScheduledDateIndexName}
         ON Meeting ((${latestTentativeOrScheduledDateExpr}))
-    `);
+    `,
+    );
     await queryRunner.query(
       `CREATE UNIQUE INDEX "IDX_Meeting_Slug" ON "Meeting" ("Slug")
-    `);
+    `,
+    );
   }
 
   async down(queryRunner) {

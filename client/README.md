@@ -4,11 +4,12 @@ This directory contains the frontend source code for the CabbageMeet application
 It was created with [Create-React-App](https://create-react-app.dev).
 
 ## Domains
-* Set the environment variable REACT_APP_API_BASE_URL to the domain of the
+
+- Set the environment variable REACT_APP_API_BASE_URL to the domain of the
   API server if it is different from the domain of the public website. This
   is useful if the static assets are being served from a CDN. Make sure to
   also set ENABLE_CORS=true in the server.
-* Consider changing the `og:url` meta tag in index.html.
+- Consider changing the `og:url` meta tag in index.html.
 
 ## Available Scripts
 
@@ -37,12 +38,15 @@ The build is minified and the filenames include the hashes.
 See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
 
 ## E2E tests (Playwright)
+
 ### Dependencies
+
 If you are going to use your computer's existing Chromium installation, you
 don't need to install a Playwright-bundled browser (this needs to be the
 latest Chromium version, though).
 
 Otherwise, you need to install the Playwright browser(s) separately:
+
 ```bash
 # Or chromium, webkit, etc.
 # Omit the browser argument to install all browsers listed in playwright.config.ts
@@ -56,11 +60,14 @@ npx playwright install firefox
 See https://playwright.dev/docs/cli#install-system-dependencies for details.
 
 ### Running the servers
+
 #### Frontend
+
 You can either start the Create-React-App server separately, or build the
 static files and serve those from NestJS.
 
 Option 1: start the Create-React-App server
+
 ```bash
 # The NestJS server will listen on this port
 export PROXY_PORT=3002
@@ -70,6 +77,7 @@ npm start
 ```
 
 Option 2: use a static React build
+
 ```bash
 npm run build
 cd ../server
@@ -77,6 +85,7 @@ ln -sf ../client/build client
 ```
 
 #### Backend
+
 ```bash
 cd ../server
 npm run build
@@ -92,6 +101,7 @@ npm run start:prod
 ```
 
 ### Run tests locally
+
 ```bash
 # Use http://127.0.0.1:3002 if using a static React build
 export PUBLIC_URL=http://127.0.0.1:3003
@@ -101,7 +111,9 @@ npm run test:e2e:cr -- --workers 1
 ```
 
 ### Run tests remotely with local browser
+
 On the computer which will run the browser, run
+
 ```bash
 # If unset, default is chromium
 export BROWSER=firefox
@@ -111,6 +123,7 @@ tests/server.js
 ```
 
 To use your system's existing chromium installation:
+
 ```bash
 export BROWSER=chromium
 export BROWSER_PATH=/usr/bin/chromium
@@ -119,6 +132,7 @@ tests/server.js
 
 Make note of the port number which is printed on the command line, and
 create an SSH reverse port forwarding, e.g.
+
 ```bash
 # Replace 39671 with the actual port number
 ssh -R 39671:localhost:39671 user@server
@@ -131,6 +145,7 @@ flag `-L 3003:localhost:3003`.
 
 Now on the server, set the environment variable WS_ENDPOINT to the URL
 which was printed earlier, then start the tests, e.g.
+
 ```bash
 export WS_ENDPOINT=ws://127.0.0.1:39671/1234567890abcdef
 # run test:e2e:ff for Firefox

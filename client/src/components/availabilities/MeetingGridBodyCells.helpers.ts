@@ -1,13 +1,17 @@
 import type { OAuth2CalendarEventsResponseItem } from "slices/api";
-import { customToISOString, getFractionalHourFromDateInLocalTime, startAndEndDateTimeToDateTimesFlat } from "utils/dates.utils";
+import {
+  customToISOString,
+  getFractionalHourFromDateInLocalTime,
+  startAndEndDateTimeToDateTimesFlat,
+} from "utils/dates.utils";
 import { assert } from "utils/misc.utils";
 
 type ExternalEventInfoWithColStart = OAuth2CalendarEventsResponseItem & {
-  colStart: number;  // grid-column-start (starts from 1)
+  colStart: number; // grid-column-start (starts from 1)
 };
 export type ExternalEventInfoWithNumCols = {
   events: ExternalEventInfoWithColStart[];
-  numCols: number;  // grid-template-columns
+  numCols: number; // grid-template-columns
 };
 export type ExternalEventInfosWithNumCols = {
   [dateTime: string]: ExternalEventInfoWithNumCols;
@@ -19,8 +23,8 @@ export type ExternalEventInfosWithNumCols = {
 // !!!!!!!!!!!!!!!!!
 function adjustExternalEventTimesToFitInGrid(
   externalEvents: OAuth2CalendarEventsResponseItem[],
-  minStartHour: number,  // can be a decimal
-  maxEndHour: number,    // can be a decimal
+  minStartHour: number, // can be a decimal
+  maxEndHour: number, // can be a decimal
 ) {
   const minStartHour_int = Math.floor(minStartHour);
   const minStartHour_minutes = (minStartHour - minStartHour_int) * 60;
@@ -34,7 +38,7 @@ function adjustExternalEventTimesToFitInGrid(
       startDate.setMinutes(minStartHour_minutes);
       // externalEvent is immutable (probably done by RTK Query), so we need to
       // create a new object
-      externalEvents[i] = {...externalEvent, startDateTime: customToISOString(startDate)};
+      externalEvents[i] = { ...externalEvent, startDateTime: customToISOString(startDate) };
     }
     const endDate = new Date(externalEvent.endDateTime);
     if (getFractionalHourFromDateInLocalTime(endDate) > maxEndHour) {
@@ -42,7 +46,7 @@ function adjustExternalEventTimesToFitInGrid(
       endDate.setMinutes(maxEndHour_minutes);
       // Make sure to use externalEvents[i] inside the spread statement
       // in case we modified the array entry previously
-      externalEvents[i] = {...externalEvents[i], endDateTime: customToISOString(endDate)};
+      externalEvents[i] = { ...externalEvents[i], endDateTime: customToISOString(endDate) };
     }
   }
 }
@@ -51,29 +55,32 @@ function adjustExternalEventTimesToFitInGrid(
 // the external event boxes to overlap with each other.
 export function calculateExternalEventInfoColumns(
   externalEvents: OAuth2CalendarEventsResponseItem[],
-  minStartHour: number,  // can be a decimal
-  maxEndHour: number,    // can be a decimal
+  minStartHour: number, // can be a decimal
+  maxEndHour: number, // can be a decimal
 ): ExternalEventInfosWithNumCols {
   if (externalEvents === undefined) {
     return {};
   }
   // sanity check - make sure events are sorted by start date (should be done by server)
-  assert(externalEvents.every(
-    (_, i) => i === externalEvents.length - 1
-              || externalEvents[i].startDateTime <= externalEvents[i+1].startDateTime
-  ));
+  assert(
+    externalEvents.every(
+      (_, i) =>
+        i === externalEvents.length - 1 ||
+        externalEvents[i].startDateTime <= externalEvents[i + 1].startDateTime,
+    ),
+  );
   // Just in case there are out-of-bounds events, filter them out
   externalEvents = externalEvents.filter(
-    ({startDateTime, endDateTime}) =>
-      getFractionalHourFromDateInLocalTime(new Date(endDateTime)) > minStartHour
-      && getFractionalHourFromDateInLocalTime(new Date(startDateTime)) < maxEndHour
+    ({ startDateTime, endDateTime }) =>
+      getFractionalHourFromDateInLocalTime(new Date(endDateTime)) > minStartHour &&
+      getFractionalHourFromDateInLocalTime(new Date(startDateTime)) < maxEndHour,
   );
   // Adjust start/end times if necessary so that they are inside the grid boundaries
   adjustExternalEventTimesToFitInGrid(externalEvents, minStartHour, maxEndHour);
   // A single cell (i.e. 30-minute interval) can have multiple external events
   // inside it. We want to show them side-by-side.
   const colsUsedPerCell: {
-    [dateTime: string]: {eventIdx: number, colStart: number}[];
+    [dateTime: string]: { eventIdx: number; colStart: number }[];
   } = {};
   // Two events are in the same group if one can be reached from the other using
   // overlapping events
@@ -83,13 +90,13 @@ export function calculateExternalEventInfoColumns(
   const eventsToRows = Array<string[]>(externalEvents.length);
   // Map event index to object which contains the number of columns for
   // that event's group (object should be the same for all events in the group)
-  const numColsPerGroup = Array<{val: number}>(externalEvents.length);
+  const numColsPerGroup = Array<{ val: number }>(externalEvents.length);
   const rowsToEvents: {
     [dateTime: string]: number[];
   } = {};
   for (let eventIdx = 0; eventIdx < externalEvents.length; eventIdx++) {
     // Note that startDateTime might not be aligned on a multiple of 30 minutes
-    const {startDateTime, endDateTime} = externalEvents[eventIdx];
+    const { startDateTime, endDateTime } = externalEvents[eventIdx];
     // All elements of `dateTimes` are aligned on a multiple of 30 minutes
     const dateTimes = startAndEndDateTimeToDateTimesFlat(startDateTime, endDateTime);
     eventsToRows[eventIdx] = dateTimes;
@@ -107,7 +114,7 @@ export function calculateExternalEventInfoColumns(
     if (!colGroups[eventIdx]) {
       // create a new group
       colGroups[eventIdx] = [eventIdx];
-      numColsPerGroup[eventIdx] = {val: 0};
+      numColsPerGroup[eventIdx] = { val: 0 };
     }
     for (const dateTime of dateTimes) {
       if (!rowsToEvents[dateTime]) rowsToEvents[dateTime] = [];
@@ -123,7 +130,7 @@ export function calculateExternalEventInfoColumns(
       let occupied = false;
       for (const dateTime of dateTimes) {
         if (!colsUsedPerCell[dateTime]) continue;
-        for (const {colStart} of colsUsedPerCell[dateTime]) {
+        for (const { colStart } of colsUsedPerCell[dateTime]) {
           if (colStart === colNum) {
             occupied = true;
             break;
@@ -139,7 +146,7 @@ export function calculateExternalEventInfoColumns(
     }
     for (const dateTime of dateTimes) {
       if (!colsUsedPerCell[dateTime]) colsUsedPerCell[dateTime] = [];
-      colsUsedPerCell[dateTime].push({eventIdx, colStart: colNum});
+      colsUsedPerCell[dateTime].push({ eventIdx, colStart: colNum });
     }
   }
 
@@ -148,9 +155,9 @@ export function calculateExternalEventInfoColumns(
     const externalEvent = externalEvents[eventIdx];
     const dateTimes = eventsToRows[eventIdx];
     const numCols = numColsPerGroup[eventIdx].val;
-    result[dateTimes[0]] ??= {events: [], numCols};
-    const {colStart} = colsUsedPerCell[dateTimes[0]].filter(e => e.eventIdx === eventIdx)[0];
-    result[dateTimes[0]].events.push({colStart, ...externalEvent});
+    result[dateTimes[0]] ??= { events: [], numCols };
+    const { colStart } = colsUsedPerCell[dateTimes[0]].filter((e) => e.eventIdx === eventIdx)[0];
+    result[dateTimes[0]].events.push({ colStart, ...externalEvent });
   }
   return result;
 }
@@ -160,7 +167,9 @@ const SECONDS_IN_THIRTY_MINUTES = 30 * 60;
 // Calculates the top offset and height of an external event box in a cell,
 // in fractions of the height of a single cell
 export function calculateTopOffsetAndHeightOfExternalEventBox(
-  cellStartTime: string, eventStartTime: string, eventEndTime: string,
+  cellStartTime: string,
+  eventStartTime: string,
+  eventEndTime: string,
 ): {
   topOffset: number;
   height: number;
@@ -172,7 +181,9 @@ export function calculateTopOffsetAndHeightOfExternalEventBox(
   assert(Number.isInteger(eventStartTimeEpochSeconds));
   assert(Number.isInteger(eventEndTimeEpochSeconds));
   assert(eventStartTimeEpochSeconds >= cellStartTimeEpochSeconds);
-  const topOffset = (eventStartTimeEpochSeconds - cellStartTimeEpochSeconds) / SECONDS_IN_THIRTY_MINUTES;
-  const height = (eventEndTimeEpochSeconds - eventStartTimeEpochSeconds) / SECONDS_IN_THIRTY_MINUTES;
-  return {topOffset, height};
+  const topOffset =
+    (eventStartTimeEpochSeconds - cellStartTimeEpochSeconds) / SECONDS_IN_THIRTY_MINUTES;
+  const height =
+    (eventEndTimeEpochSeconds - eventStartTimeEpochSeconds) / SECONDS_IN_THIRTY_MINUTES;
+  return { topOffset, height };
 }

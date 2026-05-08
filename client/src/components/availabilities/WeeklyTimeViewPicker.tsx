@@ -1,14 +1,20 @@
-import React, { useMemo, useReducer } from 'react';
-import { LeftArrow as SVGLeftArrow, RightArrow as SVGRightArrow } from 'components/Arrows';
-import { getDateFromString, getDayOfWeekAbbr, getMonthAbbr, getYearMonthDayFromDateString, tzAbbr } from 'utils/dates.utils';
-import AvailabilitiesRow from './AvailabilitiesRow';
-import MeetingGridBodyCells from './MeetingGridBodyCells';
-import MeetingRespondents from './MeetingRespondents';
-import { range } from 'utils/arrays.utils';
-import { assert } from 'utils/misc.utils';
-import { useGetCurrentMeetingWithSelector } from 'utils/meetings.hooks';
-import { useAppSelector } from 'app/hooks';
-import { selectSelMode } from 'slices/availabilitiesSelection';
+import React, { useMemo, useReducer } from "react";
+import { LeftArrow as SVGLeftArrow, RightArrow as SVGRightArrow } from "components/Arrows";
+import {
+  getDateFromString,
+  getDayOfWeekAbbr,
+  getMonthAbbr,
+  getYearMonthDayFromDateString,
+  tzAbbr,
+} from "utils/dates.utils";
+import AvailabilitiesRow from "./AvailabilitiesRow";
+import MeetingGridBodyCells from "./MeetingGridBodyCells";
+import MeetingRespondents from "./MeetingRespondents";
+import { range } from "utils/arrays.utils";
+import { assert } from "utils/misc.utils";
+import { useGetCurrentMeetingWithSelector } from "utils/meetings.hooks";
+import { useAppSelector } from "app/hooks";
+import { selectSelMode } from "slices/availabilitiesSelection";
 
 /**
  * Returns a string which can be used in the CSS grid-template-areas property
@@ -41,29 +47,29 @@ function generateGridTemplateAreas(numSchedRows: number, numSchedCols: number): 
 
   // First row: month title. It should start at the first column of the schedule grid.
   let row: string[] = [];
-  row.push(`e${e++}`);  // for the left arrow column
-  row.push(`e${e++}`);  // for the hours column
+  row.push(`e${e++}`); // for the left arrow column
+  row.push(`e${e++}`); // for the hours column
   for (let i = 0; i < numSchedCols; i++) {
-    row.push('m');
+    row.push("m");
   }
-  row.push(`e${e++}`);  // for the right arrow column
+  row.push(`e${e++}`); // for the right arrow column
   rows.push(row);
 
   // Second row: day of week indicators. They should start at the first column of
   // the schedule grid.
   row = [];
-  row.push(`e${e++}`);  // for the left arrow column
-  row.push(`e${e++}`);  // for the hours column
+  row.push(`e${e++}`); // for the left arrow column
+  row.push(`e${e++}`); // for the hours column
   for (let i = 0; i < numSchedCols; i++) {
     row.push(`w${i}`);
   }
-  row.push(`e${e++}`);  // for the right arrow column
+  row.push(`e${e++}`); // for the right arrow column
   rows.push(row);
 
   // Schedule grid: leftmost column is the times (every other row only).
   for (let i = 0; i < numSchedRows; i++) {
     row = [];
-    row.push('l');  // for the left arrow column
+    row.push("l"); // for the left arrow column
     if (i % 2 === 0) {
       row.push(`t${i / 2}`);
     } else {
@@ -72,15 +78,15 @@ function generateGridTemplateAreas(numSchedRows: number, numSchedCols: number): 
     for (let j = 0; j < numSchedCols; j++) {
       row.push(`c${c++}`);
     }
-    row.push('r');  // for the right arrow column
+    row.push("r"); // for the right arrow column
     rows.push(row);
   }
 
-  return rows.map(row => `"${row.join(' ')}"`).join(' ');
+  return rows.map((row) => `"${row.join(" ")}"`).join(" ");
 }
 
-function pageNumberReducer(page: number, action: 'inc' | 'dec'): number {
-  if (action === 'inc') {
+function pageNumberReducer(page: number, action: "inc" | "dec"): number {
+  if (action === "inc") {
     return page + 1;
   } else {
     return page - 1;
@@ -88,13 +94,11 @@ function pageNumberReducer(page: number, action: 'inc' | 'dec'): number {
 }
 
 export default function WeeklyViewTimePicker() {
-  const {startTime, endTime, dates} = useGetCurrentMeetingWithSelector(
-    ({data: meeting}) => ({
-      startTime: meeting?.minStartHour,
-      endTime: meeting?.maxEndHour,
-      dates: meeting?.tentativeDates,
-    })
-  );
+  const { startTime, endTime, dates } = useGetCurrentMeetingWithSelector(({ data: meeting }) => ({
+    startTime: meeting?.minStartHour,
+    endTime: meeting?.maxEndHour,
+    dates: meeting?.tentativeDates,
+  }));
   // If the meeting data hasn't been loaded yet, then this component
   // shouldn't even be loaded
   assert(startTime !== undefined && endTime !== undefined && dates !== undefined);
@@ -110,36 +114,40 @@ export default function WeeklyViewTimePicker() {
   const startHour = Math.floor(startTime);
   const endHour = Math.ceil(endTime);
   const [page, pageDispatch] = useReducer(pageNumberReducer, 0);
-  const numDaysDisplayed = Math.min(dates.length - page*7, 7);
+  const numDaysDisplayed = Math.min(dates.length - page * 7, 7);
   const datesDisplayed = useMemo(
-    () => dates.slice(page*7, page*7+numDaysDisplayed),
+    () => dates.slice(page * 7, page * 7 + numDaysDisplayed),
     [dates, page, numDaysDisplayed],
   );
   const numCols = numDaysDisplayed;
   // endHour can be after startHour, e.g. 10 P.M. to 2 A.M. (22 to 2)
-  const numRows = 2 * (startHour < endHour ? (endHour - startHour) : (endHour + 24 - startHour));
+  const numRows = 2 * (startHour < endHour ? endHour - startHour : endHour + 24 - startHour);
   const gridTemplateAreas = useMemo(
     () => generateGridTemplateAreas(numRows, numDaysDisplayed),
-    [numRows, numDaysDisplayed]
+    [numRows, numDaysDisplayed],
   );
-  const selModeType = useAppSelector(state => selectSelMode(state).type);
+  const selModeType = useAppSelector((state) => selectSelMode(state).type);
   const className = useMemo(() => {
-    let result = 'weeklyview-grid';
-    if (selModeType === 'addingRespondent' || selModeType === 'editingRespondent' || selModeType === 'editingSchedule') {
-      result += ' canSelectDates';
+    let result = "weeklyview-grid";
+    if (
+      selModeType === "addingRespondent" ||
+      selModeType === "editingRespondent" ||
+      selModeType === "editingSchedule"
+    ) {
+      result += " canSelectDates";
     }
     return result;
   }, [selModeType]);
   const moreDaysToLeft = page > 0;
-  const moreDaysToRight = dates.length - page*7 > 7;
+  const moreDaysToRight = dates.length - page * 7 > 7;
   return (
     <>
-      <AvailabilitiesRow {...{moreDaysToRight, pageDispatch}} />
+      <AvailabilitiesRow {...{ moreDaysToRight, pageDispatch }} />
       <div className="d-md-flex mt-3 mt-md-5">
         <div className="flex-md-grow-1">
           <div
             style={{
-              display: 'grid',
+              display: "grid",
               /* Column order: left arrow, hours, schedule grid, right arrow */
               gridTemplateColumns: `auto auto repeat(${numDaysDisplayed}, minmax(3em, 1fr)) auto`,
               /* Row order: month title, days of week, schedule grid */
@@ -151,12 +159,14 @@ export default function WeeklyViewTimePicker() {
             <MeetingGridMonthTextCell dateStrings={datesDisplayed} />
             <MeetingGridDayOfWeekCells dateStrings={datesDisplayed} />
             <MeetingTimesHoursColumn startHour={startHour} endHour={endHour} />
-            <MeetingDaysLeftArrow {...{moreDaysToLeft, pageDispatch}} />
+            <MeetingDaysLeftArrow {...{ moreDaysToLeft, pageDispatch }} />
             <MeetingGridBodyCells
-              numRows={numRows} numCols={numCols} startHour={startHour}
+              numRows={numRows}
+              numCols={numCols}
+              startHour={startHour}
               dateStrings={datesDisplayed}
             />
-            <MeetingDaysRightArrow {...{moreDaysToRight, pageDispatch}} />
+            <MeetingDaysRightArrow {...{ moreDaysToRight, pageDispatch }} />
           </div>
           <div className="mt-4 text-center weeklyview__local_time_text">
             Shown in local time ({tzAbbr})
@@ -168,64 +178,59 @@ export default function WeeklyViewTimePicker() {
   );
 }
 
-const MeetingGridMonthTextCell = React.memo(function MeetingGridMonthTextCell(
-  { dateStrings }: { dateStrings: string[] }
-) {
+const MeetingGridMonthTextCell = React.memo(function MeetingGridMonthTextCell({
+  dateStrings,
+}: {
+  dateStrings: string[];
+}) {
   const [startYear, startMonth] = getYearMonthDayFromDateString(dateStrings[0]);
   const [endYear, endMonth] = getYearMonthDayFromDateString(dateStrings[dateStrings.length - 1]);
-  const startDateText = `${getMonthAbbr(startMonth-1, false)} ${startYear}`;
-  const endDateText = `${getMonthAbbr(endMonth-1, false)} ${endYear}`;
-  const dateText = startDateText === endDateText
-    ? startDateText
-    : `${startDateText} \u00A0-\u00A0 ${endDateText}`;
+  const startDateText = `${getMonthAbbr(startMonth - 1, false)} ${startYear}`;
+  const endDateText = `${getMonthAbbr(endMonth - 1, false)} ${endYear}`;
+  const dateText =
+    startDateText === endDateText ? startDateText : `${startDateText} \u00A0-\u00A0 ${endDateText}`;
   return <div className="weeklyview-grid__monthtext">{dateText}</div>;
 });
 
-const MeetingGridDayOfWeekCells = React.memo(function MeetingGridDayOfWeekCells(
-  { dateStrings }: { dateStrings: string[] }
-) {
+const MeetingGridDayOfWeekCells = React.memo(function MeetingGridDayOfWeekCells({
+  dateStrings,
+}: {
+  dateStrings: string[];
+}) {
   return (
     <>
-      {
-        dateStrings.map((dateString, i) => {
-          const date = getDateFromString(dateString);
-          return (
-            <div
-              key={dateString}
-              className="weeklyview__colheadercell"
-              style={{gridArea: `w${i}`}}
-            >
-              <div>{getDayOfWeekAbbr(date).toUpperCase()}</div>
-              <div style={{fontSize: '1.5em'}}>{date.getDate()}</div>
-            </div>
-          );
-        })
-      }
+      {dateStrings.map((dateString, i) => {
+        const date = getDateFromString(dateString);
+        return (
+          <div key={dateString} className="weeklyview__colheadercell" style={{ gridArea: `w${i}` }}>
+            <div>{getDayOfWeekAbbr(date).toUpperCase()}</div>
+            <div style={{ fontSize: "1.5em" }}>{date.getDate()}</div>
+          </div>
+        );
+      })}
     </>
   );
 });
 
-const MeetingTimesHoursColumn = React.memo(function MeetingTimesHoursColumn(
-  {startHour, endHour}: {startHour: number, endHour: number}
-) {
-  const hoursDiff = startHour < endHour ? (endHour - startHour) : (endHour + 24 - startHour);
+const MeetingTimesHoursColumn = React.memo(function MeetingTimesHoursColumn({
+  startHour,
+  endHour,
+}: {
+  startHour: number;
+  endHour: number;
+}) {
+  const hoursDiff = startHour < endHour ? endHour - startHour : endHour + 24 - startHour;
   return (
     <>
-      {
-        range(hoursDiff).map(i => {
-          const hour = (startHour + i) % 24;
-          const hourStr = (hour % 12 === 0 ? 12 : hour % 12) + ' ' + (hour < 12 ? 'AM' : 'PM');
-          return (
-            <div
-              key={hour}
-              className="weeklyview__hourcell"
-              style={{gridArea: `t${i}`}}
-            >
-              {hourStr}
-            </div>
-          );
-        })
-      }
+      {range(hoursDiff).map((i) => {
+        const hour = (startHour + i) % 24;
+        const hourStr = (hour % 12 === 0 ? 12 : hour % 12) + " " + (hour < 12 ? "AM" : "PM");
+        return (
+          <div key={hour} className="weeklyview__hourcell" style={{ gridArea: `t${i}` }}>
+            {hourStr}
+          </div>
+        );
+      })}
     </>
   );
 });
@@ -234,19 +239,19 @@ const MeetingDaysLeftArrow = React.memo(function MeetingDaysLeftArrow({
   moreDaysToLeft,
   pageDispatch,
 }: {
-  moreDaysToLeft: boolean,
-  pageDispatch: React.Dispatch<'inc' | 'dec'>,
+  moreDaysToLeft: boolean;
+  pageDispatch: React.Dispatch<"inc" | "dec">;
 }) {
   const onClick = () => {
     if (moreDaysToLeft) {
-      pageDispatch('dec');
+      pageDispatch("dec");
     }
   };
   return (
     <div
       style={{
-        visibility: moreDaysToLeft ? 'visible' : 'hidden',
-        gridArea: 'l',
+        visibility: moreDaysToLeft ? "visible" : "hidden",
+        gridArea: "l",
       }}
       className="d-flex align-items-center"
     >
@@ -259,19 +264,19 @@ const MeetingDaysRightArrow = React.memo(function MeetingDaysRightArrow({
   moreDaysToRight,
   pageDispatch,
 }: {
-  moreDaysToRight: boolean,
-  pageDispatch: React.Dispatch<'inc' | 'dec'>,
+  moreDaysToRight: boolean;
+  pageDispatch: React.Dispatch<"inc" | "dec">;
 }) {
   const onClick = () => {
     if (moreDaysToRight) {
-      pageDispatch('inc');
+      pageDispatch("inc");
     }
   };
   return (
     <div
       style={{
-        visibility: moreDaysToRight ? 'visible' : 'hidden',
-        gridArea: 'r',
+        visibility: moreDaysToRight ? "visible" : "hidden",
+        gridArea: "r",
       }}
       className="d-flex align-items-center"
     >

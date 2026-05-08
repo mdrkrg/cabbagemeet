@@ -1,14 +1,10 @@
-import { Inject, Injectable } from '@nestjs/common';
-import type { CustomRedisClientType } from './cacher.module';
+import { Inject, Injectable } from "@nestjs/common";
+import type { CustomRedisClientType } from "./cacher.module";
 
 interface ICacherStrategy {
   getAndPop(key: string): Promise<string | null>;
   add(key: string, value: string, ttlSeconds: number): Promise<void>;
-  addIfNotPresent(
-    key: string,
-    value: string,
-    ttlSeconds: number,
-  ): Promise<boolean>;
+  addIfNotPresent(key: string, value: string, ttlSeconds: number): Promise<boolean>;
   shutdown(): void;
 }
 
@@ -16,7 +12,7 @@ interface ICacherStrategy {
 export default class CacherService {
   private readonly strategy: ICacherStrategy;
 
-  constructor(@Inject('REDIS_CLIENT') client: CustomRedisClientType | null) {
+  constructor(@Inject("REDIS_CLIENT") client: CustomRedisClientType | null) {
     if (client) {
       this.strategy = new RedisCacher(client);
     } else {
@@ -103,7 +99,7 @@ class RedisCacher implements ICacherStrategy {
       NX: true,
       EX: ttlSeconds,
     });
-    return result === 'OK';
+    return result === "OK";
   }
 
   shutdown() {}

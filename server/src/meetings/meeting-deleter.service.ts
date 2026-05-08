@@ -1,13 +1,13 @@
-import { Injectable, Logger } from '@nestjs/common';
-import ConfigService from '../config/config.service';
-import { InjectRepository } from '@nestjs/typeorm';
-import type { Repository } from 'typeorm';
-import CustomMigrationsService from '../custom-migrations/custom-migrations.service';
-import { getUTCDateString } from '../dates.utils';
-import { latestTentativeOrScheduledDateExpr as postgres_latestTentativeOrScheduledDateExpr } from '../custom-migrations/postgres/postgres-migration-constants';
-import { latestTentativeOrScheduledDateExpr as sqlite_latestTentativeOrScheduledDateExpr } from '../custom-migrations/sqlite/sqlite-migration-constants';
-import { assertIsNever, sleep } from '../misc.utils';
-import Meeting from './meeting.entity';
+import { Injectable, Logger } from "@nestjs/common";
+import ConfigService from "../config/config.service";
+import { InjectRepository } from "@nestjs/typeorm";
+import type { Repository } from "typeorm";
+import CustomMigrationsService from "../custom-migrations/custom-migrations.service";
+import { getUTCDateString } from "../dates.utils";
+import { latestTentativeOrScheduledDateExpr as postgres_latestTentativeOrScheduledDateExpr } from "../custom-migrations/postgres/postgres-migration-constants";
+import { latestTentativeOrScheduledDateExpr as sqlite_latestTentativeOrScheduledDateExpr } from "../custom-migrations/sqlite/sqlite-migration-constants";
+import { assertIsNever, sleep } from "../misc.utils";
+import Meeting from "./meeting.entity";
 
 @Injectable()
 export default class MeetingDeleterService {
@@ -20,20 +20,17 @@ export default class MeetingDeleterService {
     configService: ConfigService,
     _customMigrationsService: CustomMigrationsService,
   ) {
-    this.ttlDays = configService.get('DELETE_MEETINGS_OLDER_THAN_NUM_DAYS');
-    const dbType = configService.get('DATABASE_TYPE');
-    if (dbType === 'sqlite') {
+    this.ttlDays = configService.get("DELETE_MEETINGS_OLDER_THAN_NUM_DAYS");
+    const dbType = configService.get("DATABASE_TYPE");
+    if (dbType === "sqlite") {
       // index on expression (requires custom migration)
-      this.latestTentativeOrScheduledDateExpr =
-        sqlite_latestTentativeOrScheduledDateExpr;
-    } else if (dbType === 'mariadb') {
+      this.latestTentativeOrScheduledDateExpr = sqlite_latestTentativeOrScheduledDateExpr;
+    } else if (dbType === "mariadb") {
       // generated virtual column
-      this.latestTentativeOrScheduledDateExpr =
-        'LatestTentativeOrScheduledDate';
-    } else if (dbType === 'postgres') {
+      this.latestTentativeOrScheduledDateExpr = "LatestTentativeOrScheduledDate";
+    } else if (dbType === "postgres") {
       // index on expression (requires custom migration)
-      this.latestTentativeOrScheduledDateExpr =
-        postgres_latestTentativeOrScheduledDateExpr;
+      this.latestTentativeOrScheduledDateExpr = postgres_latestTentativeOrScheduledDateExpr;
     } else {
       assertIsNever(dbType);
     }

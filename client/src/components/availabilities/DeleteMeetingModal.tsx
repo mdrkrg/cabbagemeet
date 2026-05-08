@@ -9,25 +9,28 @@ import { selectCurrentMeetingID } from "slices/currentMeeting";
 import { assert } from "utils/misc.utils";
 
 export default function DeleteMeetingModal({
-  show, setShow
+  show,
+  setShow,
 }: {
-  show: boolean, setShow: (val: boolean) => void,
+  show: boolean;
+  setShow: (val: boolean) => void;
 }) {
   const meetingID = useAppSelector(selectCurrentMeetingID);
   assert(meetingID !== undefined);
-  const [deleteMeeting, {isLoading, isSuccess, error, reset}] = useMutationWithPersistentError(useDeleteMeetingMutation);
+  const [deleteMeeting, { isLoading, isSuccess, error, reset }] =
+    useMutationWithPersistentError(useDeleteMeetingMutation);
   const navigate = useNavigate();
-  const {showToast} = useToast();
+  const { showToast } = useToast();
   const onDeleteClick = () => deleteMeeting(meetingID);
 
   useEffect(() => {
     if (isSuccess) {
       showToast({
-        msg: 'Successfully deleted meeting',
-        msgType: 'success',
+        msg: "Successfully deleted meeting",
+        msgType: "success",
         autoClose: true,
       });
-      navigate('/');
+      navigate("/");
     }
   }, [isSuccess, showToast, navigate]);
 
@@ -44,4 +47,4 @@ export default function DeleteMeetingModal({
       reset={reset}
     />
   );
-};
+}

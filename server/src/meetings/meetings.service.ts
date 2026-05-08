@@ -1,19 +1,23 @@
-import { Injectable } from '@nestjs/common';
-import { ModuleRef } from '@nestjs/core';
-import { InjectRepository } from '@nestjs/typeorm';
-import { DateTime } from 'luxon';
-import ShortUniqueId from 'short-unique-id';
-import { Repository } from 'typeorm';
-import ConfigService from '../config/config.service';
-import type { DatabaseType } from '../config/env.validation';
-import MailService from '../mail/mail.service';
-import { assert } from '../misc.utils';
-import OAuth2Service from '../oauth2/oauth2.service';
-import User from '../users/user.entity';
-import UsersService from '../users/users.service';
-import MeetingRespondent from './meeting-respondent.entity';
-import Meeting from './meeting.entity';
-import { NoSuchMeetingError, NoSuchRespondentError, createPublicMeetingURL } from './meetings.utils';
+import { Injectable } from "@nestjs/common";
+import { ModuleRef } from "@nestjs/core";
+import { InjectRepository } from "@nestjs/typeorm";
+import { DateTime } from "luxon";
+import ShortUniqueId from "short-unique-id";
+import { Repository } from "typeorm";
+import ConfigService from "../config/config.service";
+import type { DatabaseType } from "../config/env.validation";
+import MailService from "../mail/mail.service";
+import { assert } from "../misc.utils";
+import OAuth2Service from "../oauth2/oauth2.service";
+import User from "../users/user.entity";
+import UsersService from "../users/users.service";
+import MeetingRespondent from "./meeting-respondent.entity";
+import Meeting from "./meeting.entity";
+import {
+  NoSuchMeetingError,
+  NoSuchRespondentError,
+  createPublicMeetingURL,
+} from "./meetings.utils";
 
 const generateSlug = new ShortUniqueId({ length: 12 });
 
@@ -28,8 +32,8 @@ function formatScheduledTimeRange(
   const startDate = DateTime.fromISO(startDateTime).setZone(tz);
   // See https://moment.github.io/luxon/#/formatting?id=table-of-tokens
   // We want e.g. "8:00AM"
-  const startTime = startDate.toFormat('h:mma');
-  const endTime = DateTime.fromISO(endDateTime).setZone(tz).toFormat('h:mma');
+  const startTime = startDate.toFormat("h:mma");
+  const endTime = DateTime.fromISO(endDateTime).setZone(tz).toFormat("h:mma");
   const tzShort = startDate.offsetNameShort;
   return {
     // See https://moment.github.io/luxon/#/formatting?id=presets
@@ -54,8 +58,8 @@ export default class MeetingsService {
     private moduleRef: ModuleRef,
     configService: ConfigService,
   ) {
-    this.publicURL = configService.get('PUBLIC_URL');
-    this.dbType = configService.get('DATABASE_TYPE');
+    this.publicURL = configService.get("PUBLIC_URL");
+    this.dbType = configService.get("DATABASE_TYPE");
   }
 
   onModuleInit() {
@@ -82,31 +86,27 @@ export default class MeetingsService {
   private _getMeetingWithRespondents() {
     return this.meetingsRepository
       .createQueryBuilder()
-      .leftJoin('Meeting.Respondents', 'MeetingRespondent')
-      .leftJoin('MeetingRespondent.User', 'User')
-      .select(['Meeting', 'MeetingRespondent', 'User.ID', 'User.Name']);
+      .leftJoin("Meeting.Respondents", "MeetingRespondent")
+      .leftJoin("MeetingRespondent.User", "User")
+      .select(["Meeting", "MeetingRespondent", "User.ID", "User.Name"]);
   }
 
   getMeetingWithRespondentsByID(meetingID: number): Promise<Meeting | null> {
     return this._getMeetingWithRespondents()
-      .where('Meeting.ID = :meetingID', { meetingID })
+      .where("Meeting.ID = :meetingID", { meetingID })
       .getOne();
   }
 
-  getMeetingWithRespondentsBySlug(
-    meetingSlug: string,
-  ): Promise<Meeting | null> {
+  getMeetingWithRespondentsBySlug(meetingSlug: string): Promise<Meeting | null> {
     return this._getMeetingWithRespondents()
-      .where('Meeting.Slug = :meetingSlug', { meetingSlug })
+      .where("Meeting.Slug = :meetingSlug", { meetingSlug })
       .getOne();
   }
 
-  private getRespondentsWithNotificationsEnabled(
-    meetingID: number,
-  ): Promise<MeetingRespondent[]> {
+  private getRespondentsWithNotificationsEnabled(meetingID: number): Promise<MeetingRespondent[]> {
     return this.respondentsRepository
       .createQueryBuilder()
-      .leftJoin('MeetingRespondent.User', 'User')
+      .leftJoin("MeetingRespondent.User", "User")
       .select([
         // !!!!!!!!!!
         // There appears to be a bug in TypeORM where non-guest respondents
@@ -115,24 +115,19 @@ export default class MeetingsService {
         // returned from getMany().
         // So we need to select the MeetingID even though it's redundant.
         // !!!!!!!!!!
-        'MeetingRespondent.MeetingID',
-        'MeetingRespondent.GuestName',
-        'MeetingRespondent.GuestEmail',
-        'User.ID',
-        'User.Name',
-        'User.Email',
+        "MeetingRespondent.MeetingID",
+        "MeetingRespondent.GuestName",
+        "MeetingRespondent.GuestEmail",
+        "User.ID",
+        "User.Name",
+        "User.Email",
       ])
-      .where('MeetingRespondent.MeetingID = :meetingID', { meetingID })
-      .andWhere(
-        '(MeetingRespondent.GuestEmail IS NOT NULL OR User.IsSubscribedToNotifications)',
-      )
+      .where("MeetingRespondent.MeetingID = :meetingID", { meetingID })
+      .andWhere("(MeetingRespondent.GuestEmail IS NOT NULL OR User.IsSubscribedToNotifications)")
       .getMany();
   }
 
-  private async updateMeetingDB(
-    meeting: Meeting,
-    meetingInfo: Partial<Meeting>,
-  ) {
+  private async updateMeetingDB(meeting: Meeting, meetingInfo: Partial<Meeting>) {
     // TODO: use a transaction to wrap the initial read of the meeting + the update
     await this.meetingsRepository.update(meeting.ID, meetingInfo);
     Object.assign(meeting, meetingInfo);
@@ -148,16 +143,11 @@ export default class MeetingsService {
     ) {
       // Update respondents' external calendars
       // Do not await the Promise so that we don't block the caller
-      this.oauth2Service.tryCreateOrUpdateEventsForMeetingForAllRespondents(
-        meeting,
-      );
+      this.oauth2Service.tryCreateOrUpdateEventsForMeetingForAllRespondents(meeting);
     }
   }
 
-  private createScheduledNotificationEmailBody(
-    meeting: Meeting,
-    name: string,
-  ): string {
+  private createScheduledNotificationEmailBody(meeting: Meeting, name: string): string {
     const { dayString, timeRangeString } = formatScheduledTimeRange(
       meeting.ScheduledStartDateTime,
       meeting.ScheduledEndDateTime,
@@ -165,15 +155,15 @@ export default class MeetingsService {
     );
     return (
       `Hello ${name},\n` +
-      '\n' +
+      "\n" +
       `The meeting "${meeting.Name}" has been scheduled:\n` +
-      '\n' +
+      "\n" +
       `  ${dayString}\n` +
       `  ${timeRangeString}\n` +
-      '\n' +
+      "\n" +
       `View details here: ${createPublicMeetingURL(this.publicURL, meeting)}\n` +
-      '\n' +
-      '-- \n' +
+      "\n" +
+      "-- \n" +
       `CabbageMeet | ${this.publicURL}\n`
     );
   }
@@ -194,8 +184,7 @@ export default class MeetingsService {
     await this.updateMeetingDB(meeting, updatedInfo);
     // Send email notifications
     if (!wasScheduledAtLeastOnce) {
-      const respondentsToBeNotified =
-        await this.getRespondentsWithNotificationsEnabled(meeting.ID);
+      const respondentsToBeNotified = await this.getRespondentsWithNotificationsEnabled(meeting.ID);
       for (const respondent of respondentsToBeNotified) {
         if (maybeUser && respondent.User?.ID === maybeUser.ID) {
           // Don't notify the person who scheduled the meeting
@@ -213,9 +202,7 @@ export default class MeetingsService {
     }
     // Update respondents' external calendars
     // Do not await the Promise so that we don't block the caller
-    this.oauth2Service.tryCreateOrUpdateEventsForMeetingForAllRespondents(
-      meeting,
-    );
+    this.oauth2Service.tryCreateOrUpdateEventsForMeetingForAllRespondents(meeting);
   }
 
   async unscheduleMeeting(meeting: Meeting) {
@@ -240,18 +227,16 @@ export default class MeetingsService {
     //
     // Alternative solution: use a tombstoned row
     const meeting = await this.getMeetingOrThrow(meetingSlug);
-    await this.oauth2Service.tryDeleteEventsForMeetingForAllRespondents(
-      meeting.ID,
-    );
+    await this.oauth2Service.tryDeleteEventsForMeetingForAllRespondents(meeting.ID);
     await this.meetingsRepository.delete(meeting.ID);
   }
 
   async getRespondent(respondentID: number): Promise<MeetingRespondent | null> {
     return this.respondentsRepository
       .createQueryBuilder()
-      .innerJoin('MeetingRespondent.Meeting', 'Meeting')
-      .select(['MeetingRespondent', 'Meeting'])
-      .where('MeetingRespondent.RespondentID = :respondentID', { respondentID })
+      .innerJoin("MeetingRespondent.Meeting", "Meeting")
+      .select(["MeetingRespondent", "Meeting"])
+      .where("MeetingRespondent.RespondentID = :respondentID", { respondentID })
       .getOne();
   }
 
@@ -261,14 +246,11 @@ export default class MeetingsService {
   ): Promise<MeetingRespondent | null> {
     return this.respondentsRepository
       .createQueryBuilder()
-      .innerJoin(
-        'MeetingRespondent.Meeting',
-        'Meeting',
-        'Meeting.Slug = :meetingSlug',
-        { meetingSlug },
-      )
-      .select(['MeetingRespondent', 'Meeting'])
-      .where('MeetingRespondent.UserID = :userID', { userID })
+      .innerJoin("MeetingRespondent.Meeting", "Meeting", "Meeting.Slug = :meetingSlug", {
+        meetingSlug,
+      })
+      .select(["MeetingRespondent", "Meeting"])
+      .where("MeetingRespondent.UserID = :userID", { userID })
       .getOne();
   }
 
@@ -284,22 +266,18 @@ export default class MeetingsService {
       // for their own meeting
       return;
     }
-    const meetingCreator = await this.usersService.findOneByID(
-      meeting.CreatorID,
-    );
+    const meetingCreator = await this.usersService.findOneByID(meeting.CreatorID);
     if (!meetingCreator.IsSubscribedToNotifications) {
       return;
     }
     const respondentName = user?.Name ?? guestName;
     const body = `Hello ${meetingCreator.Name},
 
-${respondentName} has added their availabilities to the meeting "${
-      meeting.Name
-    }".
+${respondentName} has added their availabilities to the meeting "${meeting.Name}".
 
 Please visit ${createPublicMeetingURL(this.publicURL, meeting)} for details.
 
---${' '}
+--${" "}
 CabbageMeet | ${this.publicURL}
 `;
     await this.mailService.sendNowOrLater({
@@ -336,12 +314,12 @@ CabbageMeet | ${this.publicURL}
       respondent.User = user;
       respondent.UserID = user.ID;
     } else {
-      assert(guestName, 'guestName should have been set');
+      assert(guestName, "guestName should have been set");
       respondent.GuestName = guestName;
       respondent.GuestEmail = guestEmail || null;
     }
     await this.respondentsRepository.insert(respondent);
-    assert(respondent.RespondentID, 'RespondentID should have been updated');
+    assert(respondent.RespondentID, "RespondentID should have been updated");
     meeting.Respondents.push(respondent as MeetingRespondent);
     // Do not await the promise to avoid blocking the client
     this.sendRespondentAddedNotification(meeting, { user, guestName });
@@ -384,10 +362,7 @@ CabbageMeet | ${this.publicURL}
     user: User,
     availabilities: string[],
   ): Promise<Meeting> {
-    const existingRespondent = await this.getRespondentByMeetingAndUserID(
-      meetingSlug,
-      user.ID,
-    );
+    const existingRespondent = await this.getRespondentByMeetingAndUserID(meetingSlug, user.ID);
     let updatedMeeting: Meeting | undefined;
     if (existingRespondent) {
       updatedMeeting = await this.updateRespondent(
@@ -430,9 +405,9 @@ CabbageMeet | ${this.publicURL}
     // TODO: support cursor-based pagination
     return this.meetingsRepository
       .createQueryBuilder()
-      .select(['Meeting'])
-      .where('CreatorID = :userID', { userID })
-      .orderBy('ID', 'DESC')
+      .select(["Meeting"])
+      .where("CreatorID = :userID", { userID })
+      .orderBy("ID", "DESC")
       .limit(100)
       .getMany();
   }
@@ -441,10 +416,10 @@ CabbageMeet | ${this.publicURL}
     // TODO: support cursor-based pagination
     return this.meetingsRepository
       .createQueryBuilder()
-      .innerJoin('Meeting.Respondents', 'MeetingRespondent')
-      .select(['Meeting'])
-      .where('MeetingRespondent.UserID = :userID', { userID })
-      .orderBy('ID', 'DESC')
+      .innerJoin("Meeting.Respondents", "MeetingRespondent")
+      .select(["Meeting"])
+      .where("MeetingRespondent.UserID = :userID", { userID })
+      .orderBy("ID", "DESC")
       .limit(100)
       .getMany();
   }

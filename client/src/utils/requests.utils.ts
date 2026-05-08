@@ -1,11 +1,11 @@
 import type { FetchBaseQueryError } from "@reduxjs/toolkit/dist/query";
 import type { SerializedError } from "@reduxjs/toolkit";
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 
 // The hooks from RTK Query have really weird return types which makes it hard to
 // use type inference if you try to write a wrapper for them
 export type QueryWrapper<T> = {
-  data?: T,
+  data?: T;
   isLoading: boolean;
   isUninitialized: boolean;
   isSuccess: boolean;
@@ -14,18 +14,18 @@ export type QueryWrapper<T> = {
 };
 
 export function getReqErrorMessage(error: FetchBaseQueryError | SerializedError): string {
-  if (error.hasOwnProperty('status')) {
-    if (typeof (error as FetchBaseQueryError).status === 'string') {
+  if (error.hasOwnProperty("status")) {
+    if (typeof (error as FetchBaseQueryError).status === "string") {
       return (error as FetchBaseQueryError).status as string;
     }
-    if (typeof (error as FetchBaseQueryError).data === 'object') {
-      if ((((error as FetchBaseQueryError).data) as any).hasOwnProperty('message')) {
-        return (((error as FetchBaseQueryError).data) as any).message as string;
+    if (typeof (error as FetchBaseQueryError).data === "object") {
+      if (((error as FetchBaseQueryError).data as any).hasOwnProperty("message")) {
+        return ((error as FetchBaseQueryError).data as any).message as string;
       }
     }
     return String((error as FetchBaseQueryError).status);
   }
-  return (error as SerializedError).message || 'unknown';
+  return (error as SerializedError).message || "unknown";
 }
 
 /**
@@ -34,13 +34,13 @@ export function getReqErrorMessage(error: FetchBaseQueryError | SerializedError)
  * @param mutationHook an RTK Query mutation hook
  */
 export function useMutationWithPersistentError<T>(mutationHook: () => T): T {
-  const [mutation, {error, ...rest}] = mutationHook() as any;
+  const [mutation, { error, ...rest }] = mutationHook() as any;
   const [lastError, setLastError] = useState<any>(undefined);
-  const {isLoading} = rest;
+  const { isLoading } = rest;
   useEffect(() => {
     if (!isLoading) {
       setLastError(error);
     }
   }, [error, isLoading]);
-  return [mutation, {...rest, error: lastError}] as unknown as T;
+  return [mutation, { ...rest, error: lastError }] as unknown as T;
 }

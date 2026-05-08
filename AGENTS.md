@@ -75,6 +75,7 @@ cabbagemeet/
 ## Key Patterns
 
 ### Authentication
+
 - JWT Bearer tokens (HS256). Signed with `JWT_SIGNING_KEY` env var or auto-generated in DB `Config` table.
 - Passport.js JWT strategy (`server/src/custom-jwt/jwt.strategy.ts`).
 - `JwtAuthGuard` enforces authentication. `OptionalJwtAuthGuard` runs validation but allows unauthenticated access (populates `req.user` or `null`).
@@ -82,6 +83,7 @@ cabbagemeet/
 - Token invalidation: `TimestampOfEarliestValidToken` on User entity — tokens with `iat` older than this are rejected ("logout everywhere").
 
 ### OAuth2 / OIDC
+
 - Provider interface `IOAuth2Provider` defined in `oauth2-common.ts`.
 - `OAuth2Service` manages the OAuth2 flow: `getRequestURL()` → redirect → `handleLogin()`.
 - Redirect endpoints: `GET /redirect/google`, `GET /redirect/microsoft` (not under `/api/`).
@@ -89,18 +91,21 @@ cabbagemeet/
 - **Known bug**: ID tokens are decoded with `jwt.decode()` without cryptographic verification (TODOne in code).
 
 ### Database
+
 - TypeORM with 3 parallel backends: SQLite, MariaDB 10.5+, PostgreSQL.
 - All 3 DBs have separate migration directories — keep them in sync.
 - Entity name casing differs: PascalCase in code, bare table names in SQLite/Postgres.
 - Cross-DB compatibility: `normalizeDBError()` in `database.utils.ts` maps driver-specific error codes.
 
 ### API Conventions
+
 - All API routes under `/api/` (except OAuth2 redirects at `/redirect/*`).
 - Swagger at `/swagger` in development. Used to generate client RTK Query hooks via `@rtk-query/codegen-openapi`.
 - `server-info` endpoint controls client feature-gating (which OAuth2 providers are available, etc.).
 - Rate limiting on auth endpoints and meeting creation.
 
 ### Client Data Flow
+
 1. RTK Query `fetchBaseQuery` injects JWT Bearer token from Redux `authentication` slice.
 2. Auto-generated hooks (`api.ts`) provide query/mutation hooks with full TypeScript types.
 3. `enhancedApi.ts` overrides them with response transforms and cache invalidation.
@@ -119,17 +124,17 @@ cabbagemeet/
 
 ## Env Variables (Key Ones)
 
-| Variable | Default | Notes |
-|---|---|---|
-| `DATABASE_TYPE` | required | `sqlite` / `mariadb` / `postgres` |
-| `PUBLIC_URL` | required | Public-facing URL for redirects |
-| `JWT_SIGNING_KEY` | auto-generated | JWT signing + encryption key |
-| `OAUTH2_GOOGLE_CLIENT_ID` | — | Google OAuth2 |
-| `OAUTH2_MICROSOFT_CLIENT_ID` | — | Microsoft OAuth2 |
-| `VERIFY_SIGNUP_EMAIL_ADDRESS` | `true` | Email verification toggle |
-| `ALLOW_ANONYMOUS_MEETING_CREATION` | `true` | Feature flag |
-| `HOURLY_MEETING_CREATION_LIMIT_PER_IP` | `100` | Rate limit |
-| `DELETE_MEETINGS_OLDER_THAN_NUM_DAYS` | `60` | Auto-cleanup |
-| `EMAIL_DAILY_LIMIT` | `100` | Daily email cap |
-| `REDIS_HOST` | — | Optional Redis for multi-instance |
-| `TRUST_PROXY` | `false` | Behind reverse proxy |
+| Variable                               | Default        | Notes                             |
+| -------------------------------------- | -------------- | --------------------------------- |
+| `DATABASE_TYPE`                        | required       | `sqlite` / `mariadb` / `postgres` |
+| `PUBLIC_URL`                           | required       | Public-facing URL for redirects   |
+| `JWT_SIGNING_KEY`                      | auto-generated | JWT signing + encryption key      |
+| `OAUTH2_GOOGLE_CLIENT_ID`              | —              | Google OAuth2                     |
+| `OAUTH2_MICROSOFT_CLIENT_ID`           | —              | Microsoft OAuth2                  |
+| `VERIFY_SIGNUP_EMAIL_ADDRESS`          | `true`         | Email verification toggle         |
+| `ALLOW_ANONYMOUS_MEETING_CREATION`     | `true`         | Feature flag                      |
+| `HOURLY_MEETING_CREATION_LIMIT_PER_IP` | `100`          | Rate limit                        |
+| `DELETE_MEETINGS_OLDER_THAN_NUM_DAYS`  | `60`           | Auto-cleanup                      |
+| `EMAIL_DAILY_LIMIT`                    | `100`          | Daily email cap                   |
+| `REDIS_HOST`                           | —              | Optional Redis for multi-instance |
+| `TRUST_PROXY`                          | `false`        | Behind reverse proxy              |

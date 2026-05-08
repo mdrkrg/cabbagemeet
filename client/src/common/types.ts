@@ -3,15 +3,15 @@ import React from "react";
 /**
  * Each string MUST have the format YYYY-MM-DDTHH:mm:ssZ
  */
- export type DateTimeSet = {
-  [dateTime: string]: true,
+export type DateTimeSet = {
+  [dateTime: string]: true;
 };
 
 /**
  * Each string MUST have the format YYYY-MM-DD
  */
 export type DateSet = {
-  [date: string]: true,
+  [date: string]: true;
 };
 
 /**
@@ -23,19 +23,19 @@ export type DateSet = {
  * as this adds millisecond information (which we do not need).
  */
 export type PeopleDateTimesFlat = {
-  [userID: string]: string[],
+  [userID: string]: string[];
 };
 
 export type PeopleDateTimes = {
-  [userID: string]: DateTimeSet
+  [userID: string]: DateTimeSet;
 };
 
 export type PeopleInfo = {
   [userID: string]: {
     name: string;
-  },
+  };
 };
 
 export type Style = React.CSSProperties;
 
-export type RequestStatus = 'idle' | 'loading' | 'succeeded' | 'failed';
+export type RequestStatus = "idle" | "loading" | "succeeded" | "failed";

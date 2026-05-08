@@ -1,10 +1,10 @@
-import { Column, Index } from 'typeorm';
-import Meeting from '../meetings/meeting.entity';
+import { Column, Index } from "typeorm";
+import Meeting from "../meetings/meeting.entity";
 
 // As of this writing, functional indexes are not supported in MariaDB,
 // so we will create a virtual column and index that instead
 
-const columnName = 'LatestTentativeOrScheduledDate';
+const columnName = "LatestTentativeOrScheduledDate";
 // As of this writing, MariaDB does not support the '$[last]' JSONPATH selector
 const latestTentativeDateExpr =
   "JSON_EXTRACT(TentativeDates, CONCAT('$[', JSON_LENGTH(TentativeDates)-1, ']'))";
@@ -23,11 +23,11 @@ export function injectTypeOrmColumns() {
     by calling the Column() decorator programmatically.
   */
   Column({
-    type: 'varchar',
+    type: "varchar",
     select: false,
     insert: false,
     asExpression,
-    generatedType: 'VIRTUAL',
+    generatedType: "VIRTUAL",
   })(
     // This needs to be close to the format passed by reflect-metadata
     { constructor: Meeting, propertyName: columnName },

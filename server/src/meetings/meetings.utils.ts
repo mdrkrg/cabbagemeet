@@ -1,14 +1,14 @@
-import type Meeting from './meeting.entity';
+import type Meeting from "./meeting.entity";
 
 export class NoSuchMeetingError extends Error {
   constructor() {
-    super('No such meeting');
+    super("No such meeting");
   }
 }
 
 export class NoSuchRespondentError extends Error {
   constructor() {
-    super('No such respondent');
+    super("No such respondent");
   }
 }
 

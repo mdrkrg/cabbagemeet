@@ -1,13 +1,9 @@
-import { HttpStatus } from '@nestjs/common';
-import type { NestExpressApplication } from '@nestjs/platform-express';
-import * as request from 'supertest';
-import {
-  commonAfterAll,
-  commonBeforeAll,
-  commonBeforeEach,
-} from './e2e-testing-helpers';
+import { HttpStatus } from "@nestjs/common";
+import type { NestExpressApplication } from "@nestjs/platform-express";
+import * as request from "supertest";
+import { commonAfterAll, commonBeforeAll, commonBeforeEach } from "./e2e-testing-helpers";
 
-describe('AppController (e2e)', () => {
+describe("AppController (e2e)", () => {
   let app: NestExpressApplication;
 
   beforeAll(async () => {
@@ -16,13 +12,10 @@ describe('AppController (e2e)', () => {
   beforeEach(commonBeforeEach);
   afterAll(() => commonAfterAll(app));
 
-  it('/api/server-info (GET)', () => {
-    return request(app.getHttpServer())
-      .get('/api/server-info')
-      .expect(HttpStatus.OK)
-      .expect({
-        googleOAuth2IsSupported: false,
-        microsoftOAuth2IsSupported: false,
-      });
+  it("/api/server-info (GET)", () => {
+    return request(app.getHttpServer()).get("/api/server-info").expect(HttpStatus.OK).expect({
+      googleOAuth2IsSupported: false,
+      microsoftOAuth2IsSupported: false,
+    });
   });
 });

@@ -1,6 +1,6 @@
-import { Module } from '@nestjs/common';
-import OAuth2Module from '../oauth2/oauth2.module';
-import ServerInfoController from './server-info.controller';
+import { Module } from "@nestjs/common";
+import OAuth2Module from "../oauth2/oauth2.module";
+import ServerInfoController from "./server-info.controller";
 
 @Module({
   imports: [OAuth2Module],

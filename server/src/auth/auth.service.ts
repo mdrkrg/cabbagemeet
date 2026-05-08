@@ -1,16 +1,14 @@
-import { BadRequestException, Injectable, Logger } from '@nestjs/common';
-import * as bcrypt from 'bcrypt';
-import ConfigService from '../config/config.service';
-import User from '../users/user.entity';
-import UsersService from '../users/users.service';
-import LocalSignupDto from './local-signup.dto';
-import MailService from '../mail/mail.service';
-import CustomJwtService from '../custom-jwt/custom-jwt.service';
-import VerifyEmailAddressDto, {
-  VerifyEmailAddressEntity,
-} from './verify-email-address.dto';
-import { SECONDS_PER_MINUTE, getSecondsSinceUnixEpoch } from '../dates.utils';
-import { encodeQueryParams } from '../misc.utils';
+import { BadRequestException, Injectable, Logger } from "@nestjs/common";
+import * as bcrypt from "bcrypt";
+import ConfigService from "../config/config.service";
+import User from "../users/user.entity";
+import UsersService from "../users/users.service";
+import LocalSignupDto from "./local-signup.dto";
+import MailService from "../mail/mail.service";
+import CustomJwtService from "../custom-jwt/custom-jwt.service";
+import VerifyEmailAddressDto, { VerifyEmailAddressEntity } from "./verify-email-address.dto";
+import { SECONDS_PER_MINUTE, getSecondsSinceUnixEpoch } from "../dates.utils";
+import { encodeQueryParams } from "../misc.utils";
 
 const SALT_ROUNDS = 10;
 
@@ -25,7 +23,7 @@ export default class AuthService {
     private jwtService: CustomJwtService,
     configService: ConfigService,
   ) {
-    this.publicURL = configService.get('PUBLIC_URL');
+    this.publicURL = configService.get("PUBLIC_URL");
   }
 
   async validateUser(email: string, password: string): Promise<User | null> {
@@ -50,14 +48,14 @@ export default class AuthService {
   ): string {
     return (
       `Hello ${name},\n` +
-      '\n' +
-      'Please click the following link to verify your email address:\n' +
-      '\n' +
+      "\n" +
+      "Please click the following link to verify your email address:\n" +
+      "\n" +
       `${url}\n` +
-      '\n' +
+      "\n" +
       `This code will expire in ${expiresMinutes} minutes.\n` +
-      '\n' +
-      '-- \n' +
+      "\n" +
+      "-- \n" +
       `CabbageMeet | ${this.publicURL}\n`
     );
   }
@@ -72,28 +70,24 @@ export default class AuthService {
       JSON.stringify(bodyWithExp),
     );
     const params: VerifyEmailAddressDto = {
-      encrypted_entity: encrypted.toString('base64url'),
-      iv: iv.toString('base64url'),
-      salt: salt.toString('base64url'),
-      tag: tag.toString('base64url'),
+      encrypted_entity: encrypted.toString("base64url"),
+      iv: iv.toString("base64url"),
+      salt: salt.toString("base64url"),
+      tag: tag.toString("base64url"),
     };
     const url =
       this.publicURL +
-      '/verify-email?' +
+      "/verify-email?" +
       encodeQueryParams(params as unknown as Record<string, string>);
     const sent = await this.mailService.sendNowIfAllowed({
       recipient: { address: body.email, name: body.name },
-      subject: 'CabbageMeet signup confirmation',
-      body: this.createEmailVerificationEmailBody(
-        body.name,
-        url,
-        expiresMinutes,
-      ),
+      subject: "CabbageMeet signup confirmation",
+      body: this.createEmailVerificationEmailBody(body.name, url, expiresMinutes),
     });
     if (!sent) {
       return false;
     }
-    if (process.env.NODE_ENV === 'development') {
+    if (process.env.NODE_ENV === "development") {
       this.logger.debug(`verification url=${url}`);
     }
     return true;
@@ -123,64 +117,63 @@ export default class AuthService {
     let decryptedText: string | undefined;
     try {
       decryptedText = await this.jwtService.decryptText(
-        Buffer.from(encrypted_entity, 'base64url'),
-        Buffer.from(iv, 'base64url'),
-        Buffer.from(salt, 'base64url'),
-        Buffer.from(tag, 'base64url'),
+        Buffer.from(encrypted_entity, "base64url"),
+        Buffer.from(iv, "base64url"),
+        Buffer.from(salt, "base64url"),
+        Buffer.from(tag, "base64url"),
       );
     } catch (err) {
       this.logger.error(err);
-      throw new BadRequestException('Invalid encrypted entity');
+      throw new BadRequestException("Invalid encrypted entity");
     }
     const entity = JSON.parse(decryptedText) as VerifyEmailAddressEntity;
     if (
       !(
-        typeof entity === 'object' &&
-        typeof entity.name === 'string' &&
-        typeof entity.email === 'string' &&
-        typeof entity.password === 'string' &&
-        typeof entity.exp === 'number'
+        typeof entity === "object" &&
+        typeof entity.name === "string" &&
+        typeof entity.email === "string" &&
+        typeof entity.password === "string" &&
+        typeof entity.exp === "number"
       )
     ) {
       this.logger.debug(entity);
-      throw new BadRequestException('Invalid encrypted entity');
+      throw new BadRequestException("Invalid encrypted entity");
     }
     if (getSecondsSinceUnixEpoch() > entity.exp) {
-      throw new BadRequestException('Link expired');
+      throw new BadRequestException("Link expired");
     }
     const { exp, ...signupArgs } = entity;
     return this.signup(signupArgs);
   }
 
   private createPasswordResetEmailBody(user: User): string {
-    const { token } = this.jwtService.serializeUserToJwt(user, 'pwreset');
-    const url =
-      this.publicURL + `/confirm-password-reset?pwresetToken=${token}`;
-    if (process.env.NODE_ENV === 'development') {
+    const { token } = this.jwtService.serializeUserToJwt(user, "pwreset");
+    const url = this.publicURL + `/confirm-password-reset?pwresetToken=${token}`;
+    if (process.env.NODE_ENV === "development") {
       this.logger.debug(`password reset URL=${url}`);
     }
     return (
       `Hello ${user.Name},\n` +
-      '\n' +
-      'Someone (hopefully you) recently requested a password reset for your\n' +
-      'CabbageMeet account. If this was you, please click the following link\n' +
-      'to proceed:\n' +
-      '\n' +
+      "\n" +
+      "Someone (hopefully you) recently requested a password reset for your\n" +
+      "CabbageMeet account. If this was you, please click the following link\n" +
+      "to proceed:\n" +
+      "\n" +
       url +
-      '\n' +
-      '\n' +
-      'If this was not you, you may disregard this email.\n' +
-      '\n' +
-      '-- \n' +
-      'CabbageMeet | ' +
+      "\n" +
+      "\n" +
+      "If this was not you, you may disregard this email.\n" +
+      "\n" +
+      "-- \n" +
+      "CabbageMeet | " +
       this.publicURL +
-      '\n'
+      "\n"
     );
   }
 
   async resetPassword(email: string) {
     if (!this.mailService.isConfigured()) {
-      this.logger.warn('SMTP was not configured on this server');
+      this.logger.warn("SMTP was not configured on this server");
       return;
     }
     const user = await this.usersService.findOneByEmail(email);
@@ -196,7 +189,7 @@ export default class AuthService {
     }
     this.mailService.sendNowOrLater({
       recipient: { address: email, name: user.Name },
-      subject: 'CabbageMeet password reset',
+      subject: "CabbageMeet password reset",
       body: this.createPasswordResetEmailBody(user),
     });
   }

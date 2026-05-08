@@ -13,15 +13,15 @@ import { TransformedMeetingResponse } from "./response-transforms";
 
 export function useGetCurrentMeeting() {
   const meetingID = useAppSelector(selectCurrentMeetingID);
-  const queryInfo = useGetMeetingQuery(meetingID ?? '', {skip: meetingID === undefined});
+  const queryInfo = useGetMeetingQuery(meetingID ?? "", { skip: meetingID === undefined });
   return queryInfo;
 }
 
 export function useGetCurrentMeetingWithSelector<T extends Record<string, any>>(
-  select: ({data}: {data?: TransformedMeetingResponse}) => T,
+  select: ({ data }: { data?: TransformedMeetingResponse }) => T,
 ) {
   const meetingID = useAppSelector(selectCurrentMeetingID);
-  const queryInfo = useGetMeetingQuery(meetingID ?? '', {
+  const queryInfo = useGetMeetingQuery(meetingID ?? "", {
     skip: meetingID === undefined,
     selectFromResult: select,
   });
@@ -30,11 +30,15 @@ export function useGetCurrentMeetingWithSelector<T extends Record<string, any>>(
 
 export function useGetExternalCalendarEventsIfTokenIsPresent(meetingID: string) {
   const tokenIsPresent = useAppSelector(selectTokenIsPresent);
-  const {data: userInfo} = useGetSelfInfoQuery(undefined, {skip: !tokenIsPresent});
+  const { data: userInfo } = useGetSelfInfoQuery(undefined, { skip: !tokenIsPresent });
   const hasLinkedGoogleAccount = userInfo?.hasLinkedGoogleAccount || false;
   const hasLinkedMicrosoftAccount = userInfo?.hasLinkedMicrosoftAccount || false;
-  const {data: googleResponse} = useGetGoogleCalendarEventsQuery(meetingID, {skip: !tokenIsPresent || !hasLinkedGoogleAccount});
-  const {data: microsoftResponse} = useGetMicrosoftCalendarEventsQuery(meetingID, {skip: !tokenIsPresent || !hasLinkedMicrosoftAccount});
+  const { data: googleResponse } = useGetGoogleCalendarEventsQuery(meetingID, {
+    skip: !tokenIsPresent || !hasLinkedGoogleAccount,
+  });
+  const { data: microsoftResponse } = useGetMicrosoftCalendarEventsQuery(meetingID, {
+    skip: !tokenIsPresent || !hasLinkedMicrosoftAccount,
+  });
   const mergedEvents = useMemo(() => {
     const result: OAuth2CalendarEventsResponseItem[] = [];
     if (googleResponse) result.push(...googleResponse.events);

@@ -12,41 +12,35 @@ import {
   Post,
   Query,
   UseGuards,
-} from '@nestjs/common';
-import { ModuleRef } from '@nestjs/core';
+} from "@nestjs/common";
+import { ModuleRef } from "@nestjs/core";
 import {
   ApiBearerAuth,
   ApiOperation,
   ApiResponse,
   ApiTags,
   ApiUnauthorizedResponse,
-} from '@nestjs/swagger';
-import {
-  OAuth2CalendarEvent,
-  oauth2ProviderNamesMap,
-} from '../oauth2/oauth2-common';
-import { AuthUser } from '../auth/auth-user.decorator';
-import JwtAuthGuard from '../auth/jwt-auth.guard';
+} from "@nestjs/swagger";
+import { OAuth2CalendarEvent, oauth2ProviderNamesMap } from "../oauth2/oauth2-common";
+import { AuthUser } from "../auth/auth-user.decorator";
+import JwtAuthGuard from "../auth/jwt-auth.guard";
 import {
   NotFoundResponse,
   UnauthorizedResponse,
   CustomRedirectResponse,
-} from '../common-responses';
-import { meetingToMeetingShortResponse } from '../meetings/meetings.controller';
-import MeetingsService from '../meetings/meetings.service';
-import { NoSuchMeetingError } from '../meetings/meetings.utils';
-import OAuth2Service from '../oauth2/oauth2.service';
-import {
-  OAuth2ProviderType,
-  OAuth2NotConfiguredError,
-} from '../oauth2/oauth2-common';
-import EditUserDto from './edit-user.dto';
-import LinkExternalCalendarDto from './link-external-calendar.dto';
-import OAuth2CalendarEventsResponse from './oauth2-calendar-events.response';
-import { MeetingsShortResponse } from '../meetings/meeting-short-response';
-import UserResponse from './user-response';
-import User from './user.entity';
-import UsersService from './users.service';
+} from "../common-responses";
+import { meetingToMeetingShortResponse } from "../meetings/meetings.controller";
+import MeetingsService from "../meetings/meetings.service";
+import { NoSuchMeetingError } from "../meetings/meetings.utils";
+import OAuth2Service from "../oauth2/oauth2.service";
+import { OAuth2ProviderType, OAuth2NotConfiguredError } from "../oauth2/oauth2-common";
+import EditUserDto from "./edit-user.dto";
+import LinkExternalCalendarDto from "./link-external-calendar.dto";
+import OAuth2CalendarEventsResponse from "./oauth2-calendar-events.response";
+import { MeetingsShortResponse } from "../meetings/meeting-short-response";
+import UserResponse from "./user-response";
+import User from "./user.entity";
+import UsersService from "./users.service";
 
 export function UserToUserResponse(user: User): UserResponse {
   return {
@@ -59,10 +53,10 @@ export function UserToUserResponse(user: User): UserResponse {
   };
 }
 
-@ApiTags('me')
+@ApiTags("me")
 @ApiBearerAuth()
 @ApiUnauthorizedResponse({ type: UnauthorizedResponse })
-@Controller('me')
+@Controller("me")
 @UseGuards(JwtAuthGuard)
 export class UsersController {
   private oauth2Service: OAuth2Service;
@@ -79,9 +73,9 @@ export class UsersController {
   }
 
   @ApiOperation({
-    summary: 'Get user information',
-    description: 'Get information for the user who is currently logged in',
-    operationId: 'getSelfInfo',
+    summary: "Get user information",
+    description: "Get information for the user who is currently logged in",
+    operationId: "getSelfInfo",
   })
   @Get()
   getUserInfo(@AuthUser() user: User): UserResponse {
@@ -92,31 +86,28 @@ export class UsersController {
   // (requires email address validation + rate limiting)
 
   @ApiOperation({
-    summary: 'Edit user information',
-    description: 'Edit information for the user who is currently logged in',
-    operationId: 'editUser',
+    summary: "Edit user information",
+    description: "Edit information for the user who is currently logged in",
+    operationId: "editUser",
   })
   @Patch()
-  async updateUserInfo(
-    @AuthUser() user: User,
-    @Body() body: EditUserDto,
-  ): Promise<UserResponse> {
+  async updateUserInfo(@AuthUser() user: User, @Body() body: EditUserDto): Promise<UserResponse> {
     const updateInfo: Partial<User> = {};
     if (body.name) updateInfo.Name = body.name;
     if (body.email) updateInfo.Email = body.email;
-    if (body.hasOwnProperty('subscribe_to_notifications'))
+    if (body.hasOwnProperty("subscribe_to_notifications"))
       updateInfo.IsSubscribedToNotifications = body.subscribe_to_notifications;
     if (Object.keys(updateInfo).length === 0) {
-      throw new BadRequestException('at least one property must be present');
+      throw new BadRequestException("at least one property must be present");
     }
     const updatedUser = await this.usersService.editUser(user.ID, updateInfo);
     return UserToUserResponse(updatedUser);
   }
 
   @ApiOperation({
-    summary: 'Delete user',
-    description: 'Delete the account of the user who is currently logged in',
-    operationId: 'deleteUser',
+    summary: "Delete user",
+    description: "Delete the account of the user who is currently logged in",
+    operationId: "deleteUser",
   })
   @Delete()
   @HttpCode(HttpStatus.NO_CONTENT)
@@ -125,14 +116,12 @@ export class UsersController {
   }
 
   @ApiOperation({
-    summary: 'Get created meetings',
-    description: 'Get meetings created by the user who is currently logged in',
-    operationId: 'getCreatedMeetings',
+    summary: "Get created meetings",
+    description: "Get meetings created by the user who is currently logged in",
+    operationId: "getCreatedMeetings",
   })
-  @Get('created-meetings')
-  async getCreatedMeetings(
-    @AuthUser() user: User,
-  ): Promise<MeetingsShortResponse> {
+  @Get("created-meetings")
+  async getCreatedMeetings(@AuthUser() user: User): Promise<MeetingsShortResponse> {
     const meetings = await this.meetingsService.getMeetingsCreatedBy(user.ID);
     return {
       meetings: meetings.map(meetingToMeetingShortResponse),
@@ -140,18 +129,13 @@ export class UsersController {
   }
 
   @ApiOperation({
-    summary: 'Get responded meetings',
-    description:
-      'Get meetings to which the user who is currently logged in has responded',
-    operationId: 'getRespondedMeetings',
+    summary: "Get responded meetings",
+    description: "Get meetings to which the user who is currently logged in has responded",
+    operationId: "getRespondedMeetings",
   })
-  @Get('responded-meetings')
-  async getRespondedMeetings(
-    @AuthUser() user: User,
-  ): Promise<MeetingsShortResponse> {
-    const meetings = await this.meetingsService.getMeetingsRespondedToBy(
-      user.ID,
-    );
+  @Get("responded-meetings")
+  async getRespondedMeetings(@AuthUser() user: User): Promise<MeetingsShortResponse> {
+    const meetings = await this.meetingsService.getMeetingsRespondedToBy(user.ID);
     return {
       meetings: meetings.map(meetingToMeetingShortResponse),
     };
@@ -169,7 +153,7 @@ export class UsersController {
       const redirectURL = await this.oauth2Service.getRequestURL(
         providerType,
         {
-          reason: 'link',
+          reason: "link",
           postRedirect: body.post_redirect,
           userID: user.ID,
         },
@@ -185,14 +169,14 @@ export class UsersController {
   }
 
   @ApiOperation({
-    summary: 'Link Google calendar',
+    summary: "Link Google calendar",
     description:
-      'Link Google calendar events to the account of the user who is logged in.' +
-      ' The client should navigate to the returned OAuth2 consent page URL.',
-    operationId: 'linkGoogleCalendar',
+      "Link Google calendar events to the account of the user who is logged in." +
+      " The client should navigate to the returned OAuth2 consent page URL.",
+    operationId: "linkGoogleCalendar",
   })
   @ApiResponse({ type: NotFoundResponse })
-  @Post('link-google-calendar')
+  @Post("link-google-calendar")
   @HttpCode(HttpStatus.OK)
   linkGoogleCalendar(
     @AuthUser() user: User,
@@ -202,14 +186,14 @@ export class UsersController {
   }
 
   @ApiOperation({
-    summary: 'Link Outlook calendar',
+    summary: "Link Outlook calendar",
     description:
-      'Link Outlook calendar events to the account of the user who is logged in.' +
-      ' The client should navigate to the returned OAuth2 consent page URL.',
-    operationId: 'linkMicrosoftCalendar',
+      "Link Outlook calendar events to the account of the user who is logged in." +
+      " The client should navigate to the returned OAuth2 consent page URL.",
+    operationId: "linkMicrosoftCalendar",
   })
   @ApiResponse({ type: NotFoundResponse })
-  @Post('link-microsoft-calendar')
+  @Post("link-microsoft-calendar")
   @HttpCode(HttpStatus.OK)
   linkMicrosoftCalendar(
     @AuthUser() user: User,
@@ -229,26 +213,26 @@ export class UsersController {
   }
 
   @ApiOperation({
-    summary: 'Unlink Google calendar',
+    summary: "Unlink Google calendar",
     description:
-      'Unlink the Google account which is linked to the account of the user who is logged in.' +
-      ' The OAuth2 access token will be revoked.',
-    operationId: 'unlinkGoogleCalendar',
+      "Unlink the Google account which is linked to the account of the user who is logged in." +
+      " The OAuth2 access token will be revoked.",
+    operationId: "unlinkGoogleCalendar",
   })
-  @Delete('link-google-calendar')
+  @Delete("link-google-calendar")
   @HttpCode(HttpStatus.OK)
   unlinkGoogleCalendar(@AuthUser() user: User): Promise<UserResponse> {
     return this.unlinkCalendar(OAuth2ProviderType.GOOGLE, user);
   }
 
   @ApiOperation({
-    summary: 'Unlink Outlook calendar',
+    summary: "Unlink Outlook calendar",
     description:
-      'Unlink the Microsoft account which is linked to the account of the user who is logged in.' +
-      ' The OAuth2 access token will be revoked.',
-    operationId: 'unlinkMicrosoftCalendar',
+      "Unlink the Microsoft account which is linked to the account of the user who is logged in." +
+      " The OAuth2 access token will be revoked.",
+    operationId: "unlinkMicrosoftCalendar",
   })
-  @Delete('link-microsoft-calendar')
+  @Delete("link-microsoft-calendar")
   @HttpCode(HttpStatus.OK)
   unlinkMicrosoftCalendar(@AuthUser() user: User): Promise<UserResponse> {
     return this.unlinkCalendar(OAuth2ProviderType.MICROSOFT, user);
@@ -261,11 +245,7 @@ export class UsersController {
   ): Promise<OAuth2CalendarEventsResponse> {
     let events: OAuth2CalendarEvent[];
     try {
-      events = await this.oauth2Service.getEventsForMeeting(
-        providerType,
-        user.ID,
-        meetingSlug,
-      );
+      events = await this.oauth2Service.getEventsForMeeting(providerType, user.ID, meetingSlug);
     } catch (err: any) {
       if (err instanceof NoSuchMeetingError) {
         throw new NotFoundException();
@@ -287,40 +267,32 @@ export class UsersController {
   }
 
   @ApiOperation({
-    summary: 'Get Google calendar events',
+    summary: "Get Google calendar events",
     description:
-      'Get a list of Google calendar events whose dates overlap with' +
-      ' the tentative dates of a meeting',
-    operationId: 'getGoogleCalendarEvents',
+      "Get a list of Google calendar events whose dates overlap with" +
+      " the tentative dates of a meeting",
+    operationId: "getGoogleCalendarEvents",
   })
-  @Get('google-calendar-events')
+  @Get("google-calendar-events")
   getGoogleCalendarEvents(
     @AuthUser() user: User,
-    @Query('meetingID') meetingSlug: string,
+    @Query("meetingID") meetingSlug: string,
   ): Promise<OAuth2CalendarEventsResponse> {
-    return this.getOAuth2CalendarEvents(
-      OAuth2ProviderType.GOOGLE,
-      user,
-      meetingSlug,
-    );
+    return this.getOAuth2CalendarEvents(OAuth2ProviderType.GOOGLE, user, meetingSlug);
   }
 
   @ApiOperation({
-    summary: 'Get Microsoft calendar events',
+    summary: "Get Microsoft calendar events",
     description:
-      'Get a list of Outlook calendar events whose dates overlap with' +
-      ' the tentative dates of a meeting',
-    operationId: 'getMicrosoftCalendarEvents',
+      "Get a list of Outlook calendar events whose dates overlap with" +
+      " the tentative dates of a meeting",
+    operationId: "getMicrosoftCalendarEvents",
   })
-  @Get('microsoft-calendar-events')
+  @Get("microsoft-calendar-events")
   getMicrosoftCalendarEvents(
     @AuthUser() user: User,
-    @Query('meetingID') meetingSlug: string,
+    @Query("meetingID") meetingSlug: string,
   ): Promise<OAuth2CalendarEventsResponse> {
-    return this.getOAuth2CalendarEvents(
-      OAuth2ProviderType.MICROSOFT,
-      user,
-      meetingSlug,
-    );
+    return this.getOAuth2CalendarEvents(OAuth2ProviderType.MICROSOFT, user, meetingSlug);
   }
 }

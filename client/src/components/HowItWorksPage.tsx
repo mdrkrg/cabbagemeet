@@ -1,12 +1,12 @@
-import SelectedDatesPicture from 'assets/help-section-selected-dates.png';
-import SelectedTimesPicture from 'assets/help-section-selected-times.png';
-import DateCheckmarkPicture from 'assets/help-section-date-checkmark.png';
-import styles from './HowItWorksPage.module.css';
-import { Link } from 'react-router-dom';
-import useSetTitle from 'utils/title.hook';
+import SelectedDatesPicture from "assets/help-section-selected-dates.png";
+import SelectedTimesPicture from "assets/help-section-selected-times.png";
+import DateCheckmarkPicture from "assets/help-section-date-checkmark.png";
+import styles from "./HowItWorksPage.module.css";
+import { Link } from "react-router-dom";
+import useSetTitle from "utils/title.hook";
 
 export default function HowItWorksPage() {
-  useSetTitle('How it Works');
+  useSetTitle("How it Works");
   return (
     <>
       <div className="d-flex align-items-center justify-content-between">
@@ -47,15 +47,19 @@ function InstructionStep({
   body,
   image,
 }: {
-  stepNumber: number,
-  title: string,
-  body: string,
-  image: string,
+  stepNumber: number;
+  title: string;
+  body: string;
+  image: string;
 }) {
   return (
-    <div className={`mt-5 d-flex flex-column flex-md-row align-items-md-center ${styles.helpStepContainer}`}>
+    <div
+      className={`mt-5 d-flex flex-column flex-md-row align-items-md-center ${styles.helpStepContainer}`}
+    >
       <div>
-        <h5 className="text-primary">{stepNumber}&#41; {title}</h5>
+        <h5 className="text-primary">
+          {stepNumber}&#41; {title}
+        </h5>
         <p className="mt-4">{body}</p>
       </div>
       <div className={styles.imageContainer}>

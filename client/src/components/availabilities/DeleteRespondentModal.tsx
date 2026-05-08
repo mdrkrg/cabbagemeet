@@ -8,15 +8,20 @@ import { assert } from "utils/misc.utils";
 import { useMutationWithPersistentError } from "utils/requests.utils";
 
 export default function DeleteRespondentModal({
-  show, setShow, respondentID,
+  show,
+  setShow,
+  respondentID,
 }: {
-  show: boolean, setShow: (val: boolean) => void,
-  respondentID: number,
+  show: boolean;
+  setShow: (val: boolean) => void;
+  respondentID: number;
 }) {
   const meetingID = useAppSelector(selectCurrentMeetingID);
   assert(meetingID !== undefined);
   const dispatch = useAppDispatch();
-  const [deleteRespondent, {isSuccess, isLoading, error, reset}] = useMutationWithPersistentError(useDeleteRespondentMutation);
+  const [deleteRespondent, { isSuccess, isLoading, error, reset }] = useMutationWithPersistentError(
+    useDeleteRespondentMutation,
+  );
 
   useEffect(() => {
     if (isSuccess) {

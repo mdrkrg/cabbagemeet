@@ -1,40 +1,40 @@
-import React, { useEffect, useState } from 'react';
-import Form from 'react-bootstrap/Form';
-import { useToast } from 'components/Toast';
-import styles from './ForgotPassword.module.css';
-import ButtonWithSpinner from './ButtonWithSpinner';
-import { useResetPasswordMutation } from 'slices/api';
-import { getReqErrorMessage } from 'utils/requests.utils';
-import useSetTitle from 'utils/title.hook';
+import React, { useEffect, useState } from "react";
+import Form from "react-bootstrap/Form";
+import { useToast } from "components/Toast";
+import styles from "./ForgotPassword.module.css";
+import ButtonWithSpinner from "./ButtonWithSpinner";
+import { useResetPasswordMutation } from "slices/api";
+import { getReqErrorMessage } from "utils/requests.utils";
+import useSetTitle from "utils/title.hook";
 
- export default function ForgotPassword() {
-  const [email, setEmail] = useState('');
+export default function ForgotPassword() {
+  const [email, setEmail] = useState("");
   const [resetPasswordAtLeastOnce, setResetPasswordAtLeastOnce] = useState(false);
 
-  useSetTitle('Forgot Password');
+  useSetTitle("Forgot Password");
 
   return (
     <div className="d-flex justify-content-center">
-      {
-        resetPasswordAtLeastOnce
-        ? <PasswordResetConfirmation email={email} />
-        : <ForgotPasswordForm {...{email, setEmail, setResetPasswordAtLeastOnce}} />
-      }
+      {resetPasswordAtLeastOnce ? (
+        <PasswordResetConfirmation email={email} />
+      ) : (
+        <ForgotPasswordForm {...{ email, setEmail, setResetPasswordAtLeastOnce }} />
+      )}
     </div>
-  )
- };
+  );
+}
 
 function ForgotPasswordForm({
   email,
   setEmail,
   setResetPasswordAtLeastOnce,
-} : {
-  email: string,
-  setEmail: (email: string) => void,
-  setResetPasswordAtLeastOnce: (val: boolean) => void,
+}: {
+  email: string;
+  setEmail: (email: string) => void;
+  setResetPasswordAtLeastOnce: (val: boolean) => void;
 }) {
   const [validated, setValidated] = useState(false);
-  const [resetPassword, {isLoading, isSuccess, error}] = useResetPasswordMutation();
+  const [resetPassword, { isLoading, isSuccess, error }] = useResetPasswordMutation();
   const canSendRequest = !isLoading && !isSuccess;
   const submitBtnDisabled = !canSendRequest;
   let onSubmit: React.FormEventHandler<HTMLFormElement> | undefined;
@@ -43,7 +43,7 @@ function ForgotPasswordForm({
       ev.preventDefault();
       const form = ev.currentTarget;
       if (form.checkValidity()) {
-        resetPassword({email});
+        resetPassword({ email });
       } else {
         setValidated(true);
       }
@@ -57,11 +57,11 @@ function ForgotPasswordForm({
   }, [isSuccess, setResetPasswordAtLeastOnce]);
 
   return (
-    <Form noValidate className={styles.forgotPasswordForm} {...{validated, onSubmit}}>
+    <Form noValidate className={styles.forgotPasswordForm} {...{ validated, onSubmit }}>
       <h4 className="mb-5">Forgot your password?</h4>
       <p>
-        Enter the email associated with your account. If the account exists,
-        you will be sent a link to reset your password.
+        Enter the email associated with your account. If the account exists, you will be sent a link
+        to reset your password.
       </p>
       <Form.Group controlId="forgotpassword-form-email" className="mt-5">
         <Form.Label>Email address</Form.Label>
@@ -92,25 +92,21 @@ function ForgotPasswordForm({
   );
 }
 
-function PasswordResetConfirmation({
-  email,
-}: {
-  email: string,
-}) {
+function PasswordResetConfirmation({ email }: { email: string }) {
   const { showToast } = useToast();
-  const [resetPassword, {isLoading, isSuccess, error}] = useResetPasswordMutation();
+  const [resetPassword, { isLoading, isSuccess, error }] = useResetPasswordMutation();
   const submitBtnDisabled = isLoading;
   const canSendRequest = !submitBtnDisabled;
   let onClick: React.MouseEventHandler | undefined;
   if (canSendRequest) {
-    onClick = () => resetPassword({email});
+    onClick = () => resetPassword({ email });
   }
 
   useEffect(() => {
     if (isSuccess) {
       showToast({
-        msg: 'Request successfully submitted',
-        msgType: 'success',
+        msg: "Request successfully submitted",
+        msgType: "success",
         autoClose: true,
       });
     }
@@ -120,10 +116,9 @@ function PasswordResetConfirmation({
     <div className={styles.passwordResetConfirmation}>
       <h4 className="mb-5">Email sent!</h4>
       <p>
-        If the account exists, you'll receive an email with a link to
-        reset your password. If more than 10 minutes have passed and you
-        still haven't received it, press the Resend button below to receive
-        a new email.
+        If the account exists, you'll receive an email with a link to reset your password. If more
+        than 10 minutes have passed and you still haven't received it, press the Resend button below
+        to receive a new email.
       </p>
       <ButtonWithSpinner
         as="NonFocusButton"

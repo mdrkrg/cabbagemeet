@@ -1,4 +1,4 @@
-import { Column, Index, PrimaryColumn } from 'typeorm';
+import { Column, Index, PrimaryColumn } from "typeorm";
 
 export default abstract class AbstractOAuth2CalendarCreatedEvent {
   @PrimaryColumn()

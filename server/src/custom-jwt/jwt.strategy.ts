@@ -1,21 +1,21 @@
-import * as crypto from 'crypto';
-import { ExtractJwt, Strategy } from 'passport-jwt';
-import { PassportStrategy } from '@nestjs/passport';
-import { Inject, Injectable, Logger } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
-import ConfigService from '../config/config.service';
-import { DbconfigService } from '../dbconfig/dbconfig.service';
-import User from '../users/user.entity';
-import UsersService from '../users/users.service';
-import { getSecondsSinceUnixEpoch } from '../dates.utils';
-import { Request } from 'express';
-import CacherService from '../cacher/cacher.service';
+import * as crypto from "crypto";
+import { ExtractJwt, Strategy } from "passport-jwt";
+import { PassportStrategy } from "@nestjs/passport";
+import { Inject, Injectable, Logger } from "@nestjs/common";
+import { JwtService } from "@nestjs/jwt";
+import ConfigService from "../config/config.service";
+import { DbconfigService } from "../dbconfig/dbconfig.service";
+import User from "../users/user.entity";
+import UsersService from "../users/users.service";
+import { getSecondsSinceUnixEpoch } from "../dates.utils";
+import { Request } from "express";
+import CacherService from "../cacher/cacher.service";
 
 export async function getJWTSigningKey(
   configService: ConfigService,
   dbconfigService: DbconfigService,
 ): Promise<string> {
-  const keyName = 'JWT_SIGNING_KEY';
+  const keyName = "JWT_SIGNING_KEY";
   const keyFromEnv = configService.get(keyName);
   if (keyFromEnv) {
     return keyFromEnv;
@@ -25,12 +25,12 @@ export async function getJWTSigningKey(
     return keyFromDb;
   }
   // Need to generate a new key
-  const newKey = crypto.randomBytes(32).toString('base64');
+  const newKey = crypto.randomBytes(32).toString("base64");
   await dbconfigService.set(keyName, newKey);
   return newKey;
 }
 
-export type TokenPurpose = 'pwreset';
+export type TokenPurpose = "pwreset";
 export type SerializedUserJwt = {
   sub: string; // user ID
   iat: number; // when the JWT was created (seconds since Unix epoch)
@@ -47,7 +47,7 @@ export default class JwtStrategy extends PassportStrategy(Strategy) {
   private logger = new Logger(JwtStrategy.name);
 
   constructor(
-    @Inject('JWT_SIGNING_KEY') secret: string,
+    @Inject("JWT_SIGNING_KEY") secret: string,
     private cacherService: CacherService,
     private jwtService: JwtService,
     private usersService: UsersService,
@@ -59,28 +59,19 @@ export default class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  async validate(
-    req: Request,
-    payload: SerializedUserJwt,
-  ): Promise<User | null> {
+  async validate(req: Request, payload: SerializedUserJwt): Promise<User | null> {
     const user = await this.usersService.findOneByID(+payload.sub);
     if (user === null) {
       return null;
     }
-    if (payload.cabbagemeet__token_purpose === 'pwreset') {
+    if (payload.cabbagemeet__token_purpose === "pwreset") {
       const now = getSecondsSinceUnixEpoch();
       if (now - payload.iat > PWRESET_TOKEN_LIFETIME_SECONDS) {
         return null;
       }
       const token = this.jwtFromRequest(req);
-      if (
-        !(await this.cacherService.addIfNotPresent(
-          token,
-          '1',
-          PWRESET_TOKEN_LIFETIME_SECONDS,
-        ))
-      ) {
-        this.logger.debug('Detected attempt to re-use password reset token');
+      if (!(await this.cacherService.addIfNotPresent(token, "1", PWRESET_TOKEN_LIFETIME_SECONDS))) {
+        this.logger.debug("Detected attempt to re-use password reset token");
         return null;
       }
     } else {

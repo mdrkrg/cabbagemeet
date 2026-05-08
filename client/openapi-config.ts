@@ -1,4 +1,4 @@
-import type { ConfigFile } from '@rtk-query/codegen-openapi';
+import type { ConfigFile } from "@rtk-query/codegen-openapi";
 
 /*
 See https://redux-toolkit.js.org/rtk-query/usage/code-generation
@@ -10,11 +10,11 @@ npx @rtk-query/codegen-openapi openapi-config.ts
 */
 
 const config: ConfigFile = {
-  schemaFile: './openapi.json',
-  apiFile: './src/slices/emptyApi.ts',
-  apiImport: 'emptyApi',
-  outputFile: './src/slices/api.ts',
-  exportName: 'api',
+  schemaFile: "./openapi.json",
+  apiFile: "./src/slices/emptyApi.ts",
+  apiImport: "emptyApi",
+  outputFile: "./src/slices/api.ts",
+  exportName: "api",
   hooks: true,
   flattenArg: true,
 };

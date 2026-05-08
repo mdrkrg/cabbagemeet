@@ -7,6 +7,7 @@
 [![](https://github.com/maxerenberg/cabbagemeet/workflows/CI/badge.svg)](https://github.com/maxerenberg/cabbagemeet/actions?query=workflow%3ACI)
 
 ## Description
+
 [CabbageMeet](https://cabbagemeet.com) aims to be an open-source alternative
 to LettuceMeet. It is a web-based application for
 scheduling meetings between two or more people.
@@ -20,7 +21,9 @@ Google/Outlook calendar integration is also supported, so an event can be
 created on your personal calendar when a meeting is scheduled.
 
 ## Running in development mode
+
 ### Backend
+
 ```bash
 cd server
 npm install
@@ -36,6 +39,7 @@ scripts/mockSmtpServer.js
 ```
 
 ### Frontend
+
 ```bash
 # Start the React app
 cd client
@@ -46,6 +50,7 @@ npm start
 ```
 
 ## Running in production mode
+
 ```bash
 # Create a static build
 cd client
@@ -65,4 +70,5 @@ npm run start:prod
 ```
 
 ## Logo credits
-* https://freesvg.org/cabbage-26939
+
+- https://freesvg.org/cabbage-26939

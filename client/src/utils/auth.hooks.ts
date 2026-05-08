@@ -1,25 +1,22 @@
 import { useEffect, useRef } from "react";
 import { useGetSelfInfoQuery } from "slices/api";
-import {
-  selectTokenIsPresent,
-  setToken,
-} from "slices/authentication";
+import { selectTokenIsPresent, setToken } from "slices/authentication";
 import { useAppDispatch, useAppSelector } from "app/hooks";
 import { useSearchParams } from "react-router-dom";
 import { getSessionNonce, removeSessionNonce } from "./auth.utils";
 
 export function useGetSelfInfoIfTokenIsPresent() {
   const tokenIsPresent = useAppSelector(selectTokenIsPresent);
-  const queryInfo = useGetSelfInfoQuery(undefined, {skip: !tokenIsPresent});
+  const queryInfo = useGetSelfInfoQuery(undefined, { skip: !tokenIsPresent });
   return queryInfo;
 }
 
 export function useSelfInfoIsPresent(): boolean {
   const tokenIsPresent = useAppSelector(selectTokenIsPresent);
-  const {isPresent} = useGetSelfInfoQuery(undefined, {
+  const { isPresent } = useGetSelfInfoQuery(undefined, {
     skip: !tokenIsPresent,
-    selectFromResult: ({data}) => ({
-      isPresent: !!data
+    selectFromResult: ({ data }) => ({
+      isPresent: !!data,
     }),
   });
   return isPresent;
@@ -34,14 +31,14 @@ export function useExtractTokenFromQueryParams(): boolean {
   // We use a ref to avoid running the useEffect hook twice when we replace the URL
   const searchParamsRef = useRef(searchParams);
   useEffect(() => {
-    const token = searchParamsRef.current.get('token');
-    const nonce = searchParamsRef.current.get('nonce');
+    const token = searchParamsRef.current.get("token");
+    const nonce = searchParamsRef.current.get("nonce");
     if (token !== null && nonce === null) {
       // The AppRoot is waiting for us to clear the token parameter, so if the URL
       // is malformed, just fix it and return
       const newParams = new URLSearchParams(searchParamsRef.current);
-      newParams.delete('token');
-      setSearchParams(newParams, {replace: true});
+      newParams.delete("token");
+      setSearchParams(newParams, { replace: true });
       searchParamsRef.current = newParams;
     }
     if (token === null || nonce === null) {
@@ -54,10 +51,10 @@ export function useExtractTokenFromQueryParams(): boolean {
     }
     removeSessionNonce();
     const newParams = new URLSearchParams(searchParamsRef.current);
-    newParams.delete('token');
-    newParams.delete('nonce');
-    setSearchParams(newParams, {replace: true});
+    newParams.delete("token");
+    newParams.delete("nonce");
+    setSearchParams(newParams, { replace: true });
     searchParamsRef.current = newParams;
   }, [dispatch, setSearchParams]);
-  return searchParams.has('token');
+  return searchParams.has("token");
 }

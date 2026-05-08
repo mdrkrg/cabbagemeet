@@ -1,9 +1,9 @@
-import { ApiProperty, OmitType } from '@nestjs/swagger';
-import MeetingResponse from '../meetings/meeting-response';
+import { ApiProperty, OmitType } from "@nestjs/swagger";
+import MeetingResponse from "../meetings/meeting-response";
 
 export default class MeetingShortResponse extends OmitType(MeetingResponse, [
-  'selfRespondentID',
-  'respondents',
+  "selfRespondentID",
+  "respondents",
 ] as const) {}
 
 export class MeetingsShortResponse {

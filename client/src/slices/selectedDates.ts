@@ -1,7 +1,7 @@
-import { createSlice } from '@reduxjs/toolkit';
-import type { PayloadAction } from '@reduxjs/toolkit';
-import type { RootState } from 'app/store';
-import type { DateSet } from 'common/types';
+import { createSlice } from "@reduxjs/toolkit";
+import type { PayloadAction } from "@reduxjs/toolkit";
+import type { RootState } from "app/store";
+import type { DateSet } from "common/types";
 
 export type SelectedDatesType = {
   // These are the dates which the user has selected from the calendar
@@ -14,7 +14,7 @@ const initialState: SelectedDatesType = {
 };
 
 export const selectedDatesSlice = createSlice({
-  name: 'selectedDates',
+  name: "selectedDates",
   initialState,
   reducers: {
     addDate: (state, action: PayloadAction<string>) => {
@@ -31,7 +31,7 @@ export const selectedDatesSlice = createSlice({
     reset: (state) => {
       return initialState;
     },
-  }
+  },
 });
 
 export const {

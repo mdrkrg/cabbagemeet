@@ -1,16 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import ButtonGroup from 'react-bootstrap/ButtonGroup';
+import ButtonGroup from "react-bootstrap/ButtonGroup";
 import { Link, useNavigate } from "react-router-dom";
 import { useAppSelector } from "app/hooks";
 import BottomOverlay from "components/BottomOverlay";
 import ButtonWithSpinner from "components/ButtonWithSpinner";
 import GenericSpinner from "components/GenericSpinner";
 import NonFocusButton from "components/NonFocusButton";
-import {
-  selectTokenIsPresent,
-} from "slices/authentication";
+import { selectTokenIsPresent } from "slices/authentication";
 import CreatedOrRespondedMeetings from "./CreatedOrRespondedMeetings";
-import styles from './Profile.module.css';
+import styles from "./Profile.module.css";
 import { useGetSelfInfoQuery, useLogoutMutation } from "slices/api";
 import { useGetSelfInfoIfTokenIsPresent } from "utils/auth.hooks";
 import { getReqErrorMessage, useMutationWithPersistentError } from "utils/requests.utils";
@@ -19,7 +17,7 @@ import useSetTitle from "utils/title.hook";
 
 export default function Profile() {
   const tokenIsPresent = useAppSelector(selectTokenIsPresent);
-  const {data: userInfo, isError} = useGetSelfInfoQuery(undefined, {skip: !tokenIsPresent});
+  const { data: userInfo, isError } = useGetSelfInfoQuery(undefined, { skip: !tokenIsPresent });
   const userInfoIsPresent = !!userInfo;
   const shouldBeRedirectedToHomePage = !tokenIsPresent || isError;
   const navigate = useNavigate();
@@ -27,14 +25,11 @@ export default function Profile() {
 
   useEffect(() => {
     if (shouldBeRedirectedToHomePage) {
-      navigate('/');
+      navigate("/");
     }
   }, [shouldBeRedirectedToHomePage, navigate]);
 
-  const title = useMemo(
-    () => userInfo ? userInfo.name + "'s Profile" : undefined,
-    [userInfo]
-  );
+  const title = useMemo(() => (userInfo ? userInfo.name + "'s Profile" : undefined), [userInfo]);
   useSetTitle(title);
 
   if (shouldBeRedirectedToHomePage) {
@@ -48,17 +43,17 @@ export default function Profile() {
   return (
     <div className="flex-grow-1 d-flex flex-column">
       <Heading />
-      <CreatedRespondedToggle {...{seeCreatedMeetings, setSeeCreatedMeetings}} />
+      <CreatedRespondedToggle {...{ seeCreatedMeetings, setSeeCreatedMeetings }} />
       <div className="flex-grow-1 d-flex flex-column align-items-center">
         <CreatedOrRespondedMeetings showCreatedMeetings={seeCreatedMeetings} />
       </div>
     </div>
   );
-};
+}
 
 function Heading() {
-  const [logout, {isLoading, error}] = useMutationWithPersistentError(useLogoutMutation);
-  const {data: userInfo} = useGetSelfInfoIfTokenIsPresent();
+  const [logout, { isLoading, error }] = useMutationWithPersistentError(useLogoutMutation);
+  const { data: userInfo } = useGetSelfInfoIfTokenIsPresent();
   const onSignoutClick = () => logout(false);
   const errorMessageElemRef = useRef<HTMLParagraphElement>(null);
 
@@ -85,9 +80,7 @@ function Heading() {
   return (
     <>
       <div className={`d-flex align-items-center ${visibilityClass}`}>
-        <h4 className="mb-0">
-          {userInfo?.name}&#39;s meetings
-        </h4>
+        <h4 className="mb-0">{userInfo?.name}&#39;s meetings</h4>
         <ButtonWithSpinner
           className="d-none d-md-block btn btn-outline-primary ms-auto"
           isLoading={signoutBtnDisabled}
@@ -102,9 +95,7 @@ function Heading() {
         </Link>
         <BottomOverlay>
           <Link to="/me/settings" className="text-decoration-none">
-            <button className="btn btn-light custom-btn-min-width">
-              Settings
-            </button>
+            <button className="btn btn-light custom-btn-min-width">Settings</button>
           </Link>
           <ButtonWithSpinner
             className="btn btn-light ms-auto"
@@ -116,10 +107,10 @@ function Heading() {
         </BottomOverlay>
       </div>
       <p
-        className={`text-danger text-center mb-0 mt-3 d-${error ? 'block' : 'none'}`}
+        className={`text-danger text-center mb-0 mt-3 d-${error ? "block" : "none"}`}
         ref={errorMessageElemRef}
       >
-        Could not sign out: {error ? getReqErrorMessage(error) : ''}
+        Could not sign out: {error ? getReqErrorMessage(error) : ""}
       </p>
     </>
   );
@@ -129,8 +120,8 @@ function CreatedRespondedToggle({
   seeCreatedMeetings,
   setSeeCreatedMeetings,
 }: {
-  seeCreatedMeetings: boolean,
-  setSeeCreatedMeetings: (val: boolean) => void,
+  seeCreatedMeetings: boolean;
+  setSeeCreatedMeetings: (val: boolean) => void;
 }) {
   const onCreatedClick = () => setSeeCreatedMeetings(true);
   const onRespondedClick = () => setSeeCreatedMeetings(false);
@@ -140,13 +131,13 @@ function CreatedRespondedToggle({
       aria-label="Choose created or responded meetings"
     >
       <NonFocusButton
-        className={`btn ${seeCreatedMeetings ? 'btn-primary' : 'btn-outline-primary'} flex-grow-0 ${styles.createdRespondedButton}`}
+        className={`btn ${seeCreatedMeetings ? "btn-primary" : "btn-outline-primary"} flex-grow-0 ${styles.createdRespondedButton}`}
         onClick={onCreatedClick}
       >
         Created
       </NonFocusButton>
       <NonFocusButton
-        className={`btn ${seeCreatedMeetings ? 'btn-outline-primary' : 'btn-primary'} flex-grow-0 ${styles.createdRespondedButton}`}
+        className={`btn ${seeCreatedMeetings ? "btn-outline-primary" : "btn-primary"} flex-grow-0 ${styles.createdRespondedButton}`}
         onClick={onRespondedClick}
       >
         Responded

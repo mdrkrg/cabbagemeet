@@ -5,7 +5,7 @@ export interface OIDCResponse {
   expires_in: number;
   id_token: string;
   scope: string;
-  token_type: 'Bearer';
+  token_type: "Bearer";
   refresh_token?: string;
 }
 
@@ -69,13 +69,13 @@ export type GoogleInsertEventResponse = GoogleListEventsResponseItem;
 
 // See https://learn.microsoft.com/en-us/graph/api/event-delta?view=graph-rest-1.0
 export interface MicrosoftEventDeltaResponse {
-  '@odata.nextLink'?: string;
-  '@odata.deltaLink'?: string;
+  "@odata.nextLink"?: string;
+  "@odata.deltaLink"?: string;
   value: {
     // Properties in which we are not interested have been omitted
     id: string;
     // See https://learn.microsoft.com/en-us/graph/delta-query-overview?tabs=http#resource-representation-in-the-delta-query-response
-    '@removed'?: { reason: 'changed' | 'deleted' };
+    "@removed"?: { reason: "changed" | "deleted" };
     // The following properties are optional because update instances will only
     // have at least the properties which have changed
     // See https://learn.microsoft.com/en-us/graph/delta-query-overview?tabs=http#resource-representation-in-the-delta-query-response

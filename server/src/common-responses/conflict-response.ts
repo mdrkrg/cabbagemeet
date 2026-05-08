@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty } from "@nestjs/swagger";
 
 export default class ConflictResponse {
   @ApiProperty({ example: 410 })
@@ -7,6 +7,6 @@ export default class ConflictResponse {
   @ApiProperty()
   message: string;
 
-  @ApiProperty({ example: 'Conflict' })
+  @ApiProperty({ example: "Conflict" })
   error: string;
 }

@@ -1,43 +1,37 @@
-import Container from 'react-bootstrap/Container';
-import Offcanvas from 'react-bootstrap/Offcanvas';
-import Nav from 'react-bootstrap/Nav';
-import Navbar from 'react-bootstrap/Navbar';
-import { LinkContainer } from 'react-router-bootstrap';
-import {
-  BrowserRouter,
-  Link,
-  Outlet,
-  Route,
-  Routes,
-} from 'react-router-dom';
-import './App.scss';
-import './custom.css';
-import 'common/common.css';
+import Container from "react-bootstrap/Container";
+import Offcanvas from "react-bootstrap/Offcanvas";
+import Nav from "react-bootstrap/Nav";
+import Navbar from "react-bootstrap/Navbar";
+import { LinkContainer } from "react-router-bootstrap";
+import { BrowserRouter, Link, Outlet, Route, Routes } from "react-router-dom";
+import "./App.scss";
+import "./custom.css";
+import "common/common.css";
 // Make sure to use JSX camelCase style in the SVG file
 // See https://stackoverflow.com/a/61167146
-import Logo from 'assets/cabbage';
-import { useAppSelector } from 'app/hooks';
-import DayPicker from 'components/DayPicker/DayPicker';
-import ForgotPassword from 'components/ForgotPassword';
-import HistoryProvider from 'components/HistoryProvider';
-import HowItWorksPage from 'components/HowItWorksPage';
-import Login from 'components/Login';
-import Signup from 'components/Signup';
-import Meeting from 'components/availabilities/Meeting';
-import Profile from 'components/Profile';
-import Settings from 'components/Settings';
-import { selectTokenIsPresent } from 'slices/authentication';
-import { useState } from 'react';
-import { useExtractTokenFromQueryParams, useGetSelfInfoIfTokenIsPresent } from 'utils/auth.hooks';
-import ErrorPage from 'components/ErrorPage';
-import ConfirmLinkExternalCalendar from 'components/ConfirmLinkExternalCalendar';
-import ConfirmPasswordReset from 'components/ConfirmPasswordReset';
-import { BottomOverlayFiller } from 'components/BottomOverlay';
-import VerifyEmail from 'components/VerifyEmail';
-import Privacy from 'components/Privacy';
-import Feedback from 'components/Feedback';
-import TermsOfService from 'components/TermsOfService';
-import { useGetServerInfoQuery } from 'slices/api';
+import Logo from "assets/cabbage";
+import { useAppSelector } from "app/hooks";
+import DayPicker from "components/DayPicker/DayPicker";
+import ForgotPassword from "components/ForgotPassword";
+import HistoryProvider from "components/HistoryProvider";
+import HowItWorksPage from "components/HowItWorksPage";
+import Login from "components/Login";
+import Signup from "components/Signup";
+import Meeting from "components/availabilities/Meeting";
+import Profile from "components/Profile";
+import Settings from "components/Settings";
+import { selectTokenIsPresent } from "slices/authentication";
+import { useState } from "react";
+import { useExtractTokenFromQueryParams, useGetSelfInfoIfTokenIsPresent } from "utils/auth.hooks";
+import ErrorPage from "components/ErrorPage";
+import ConfirmLinkExternalCalendar from "components/ConfirmLinkExternalCalendar";
+import ConfirmPasswordReset from "components/ConfirmPasswordReset";
+import { BottomOverlayFiller } from "components/BottomOverlay";
+import VerifyEmail from "components/VerifyEmail";
+import Privacy from "components/Privacy";
+import Feedback from "components/Feedback";
+import TermsOfService from "components/TermsOfService";
+import { useGetServerInfoQuery } from "slices/api";
 
 export default function App() {
   // Make sure that every single component passed to a <Route>
@@ -57,8 +51,14 @@ export default function App() {
             <Route path="m/:id" element={<Meeting />} />
             <Route path="signup" element={<Signup />} />
             <Route path="login" element={<Login />} />
-            <Route path="confirm-link-google-account" element={<ConfirmLinkExternalCalendar provider="google" />} />
-            <Route path="confirm-link-microsoft-account" element={<ConfirmLinkExternalCalendar provider="microsoft" />} />
+            <Route
+              path="confirm-link-google-account"
+              element={<ConfirmLinkExternalCalendar provider="google" />}
+            />
+            <Route
+              path="confirm-link-microsoft-account"
+              element={<ConfirmLinkExternalCalendar provider="microsoft" />}
+            />
             <Route path="forgot-password" element={<ForgotPassword />} />
             <Route path="confirm-password-reset" element={<ConfirmPasswordReset />} />
             <Route path="verify-email" element={<VerifyEmail />} />
@@ -76,17 +76,20 @@ export default function App() {
   );
 }
 
-function BrandWithLogo({onClick}: {onClick: () => void}) {
+function BrandWithLogo({ onClick }: { onClick: () => void }) {
   return (
     <LinkContainer to="/" onClick={onClick}>
       <Navbar.Brand>
-        <div className="d-inline-block me-1" style={{
-          height: '1.5em',
-          width: '1.5em',
-          // There's a bit of empty space at the top of the image
-          position: 'relative',
-          top: '-0.1em',
-        }}>
+        <div
+          className="d-inline-block me-1"
+          style={{
+            height: "1.5em",
+            width: "1.5em",
+            // There's a bit of empty space at the top of the image
+            position: "relative",
+            top: "-0.1em",
+          }}
+        >
           <Logo />
         </div>
         CabbageMeet
@@ -134,7 +137,9 @@ function AppRoot() {
               </Offcanvas.Title>
             </Offcanvas.Header>
             <Offcanvas.Body>
-              <div className="px-3"><hr className="mt-0 mb-4" /></div>
+              <div className="px-3">
+                <hr className="mt-0 mb-4" />
+              </div>
               <Nav className="ms-auto">
                 <HeaderLinks onClick={onHideToggle} />
               </Nav>
@@ -151,56 +156,43 @@ function AppRoot() {
   );
 }
 
-function HeaderLinks({onClick}: {onClick: () => void}) {
+function HeaderLinks({ onClick }: { onClick: () => void }) {
   // assume that user info will be successfully fetched if token is present (optimistic)
   const isOrWillBeLoggedIn = useAppSelector(selectTokenIsPresent);
-  const links = [{to: '/', desc: 'Meet'}];
+  const links = [{ to: "/", desc: "Meet" }];
   if (isOrWillBeLoggedIn) {
-    links.push({to: '/me', desc: 'Profile'});
+    links.push({ to: "/me", desc: "Profile" });
   } else {
     links.push(
-      {to: "/how-it-works", desc: "How it works"},
-      {to: '/signup', desc: 'Sign up'},
-      {to: '/login', desc: 'Login'},
+      { to: "/how-it-works", desc: "How it works" },
+      { to: "/signup", desc: "Sign up" },
+      { to: "/login", desc: "Login" },
     );
   }
   const offcanvasOnlyLinks = [
-    {to: '/privacy', desc: 'Privacy'},
-    {to: '/feedback', desc: 'Feedback'},
+    { to: "/privacy", desc: "Privacy" },
+    { to: "/feedback", desc: "Feedback" },
   ];
   const linkProps = {
-    className: 'header-link',
-    activeClassName: 'header-link_active',
+    className: "header-link",
+    activeClassName: "header-link_active",
   };
   const offcanvasOnlyLinksProps = {
-    className: 'header-link d-block d-md-none',
-    activeClassName: 'header-link_active d-block d-md-none',
+    className: "header-link d-block d-md-none",
+    activeClassName: "header-link_active d-block d-md-none",
   };
   return (
     <>
-      {
-        links.map(lnk => (
-          <LinkContainer
-            to={lnk.to}
-            key={lnk.to}
-            {...linkProps}
-          >
-            <Nav.Link onClick={onClick}>{lnk.desc}</Nav.Link>
-          </LinkContainer>
-        ))
-      }
-      {
-        offcanvasOnlyLinks.map(lnk => (
-          <LinkContainer
-            to={lnk.to}
-            key={lnk.to}
-            onClick={onClick}
-            {...offcanvasOnlyLinksProps}
-          >
-            <Nav.Link>{lnk.desc}</Nav.Link>
-          </LinkContainer>
-        ))
-      }
+      {links.map((lnk) => (
+        <LinkContainer to={lnk.to} key={lnk.to} {...linkProps}>
+          <Nav.Link onClick={onClick}>{lnk.desc}</Nav.Link>
+        </LinkContainer>
+      ))}
+      {offcanvasOnlyLinks.map((lnk) => (
+        <LinkContainer to={lnk.to} key={lnk.to} onClick={onClick} {...offcanvasOnlyLinksProps}>
+          <Nav.Link>{lnk.desc}</Nav.Link>
+        </LinkContainer>
+      ))}
     </>
   );
 }
@@ -208,7 +200,7 @@ function HeaderLinks({onClick}: {onClick: () => void}) {
 function Footer() {
   return (
     <footer className="d-none d-md-flex align-items-center justify-content-center border-top mt-md-5">
-      <Link to="/privacy" >Privacy</Link>
+      <Link to="/privacy">Privacy</Link>
       <Link to="/feedback">Feedback</Link>
       <Link to="/terms-of-service">Terms of Service</Link>
       <a href="https://github.com/maxerenberg/cabbagemeet">GitHub</a>

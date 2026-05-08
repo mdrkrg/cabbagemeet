@@ -1,16 +1,16 @@
-import React from 'react';
-import Form from 'react-bootstrap/Form';
-import BottomOverlay from 'components/BottomOverlay';
-import ButtonWithSpinner from 'components/ButtonWithSpinner';
+import React from "react";
+import Form from "react-bootstrap/Form";
+import BottomOverlay from "components/BottomOverlay";
+import ButtonWithSpinner from "components/ButtonWithSpinner";
 
 export default function MeetingNamePrompt({
   meetingName,
   setMeetingName,
   isLoading,
 }: {
-  meetingName: string,
-  setMeetingName: (name: string) => void,
-  isLoading: boolean,
+  meetingName: string;
+  setMeetingName: (name: string) => void;
+  isLoading: boolean;
 }) {
   return (
     <Form.Group className="d-flex align-items-center">
@@ -25,7 +25,7 @@ export default function MeetingNamePrompt({
         className="btn btn-primary d-none d-md-block ms-md-4 create-meeting-button"
         tabIndex={-1}
         type="submit"
-        disabled={meetingName === '' || isLoading}
+        disabled={meetingName === "" || isLoading}
         isLoading={isLoading}
       >
         Create
@@ -35,7 +35,7 @@ export default function MeetingNamePrompt({
           className="btn btn-light ms-auto create-meeting-button"
           tabIndex={-1}
           type="submit"
-          disabled={meetingName === '' || isLoading}
+          disabled={meetingName === "" || isLoading}
           isLoading={isLoading}
         >
           Create

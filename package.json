@@ -2,6 +2,13 @@
   "name": "cabbagemeet",
   "private": true,
   "type": "module",
+  "scripts": {
+    "prepare": "vp config"
+  },
+  "devDependencies": {
+    "vite-plus": "catalog:"
+  },
+  "packageManager": "pnpm@11.0.8",
   "pnpm": {
     "onlyBuiltDependencies": [
       "@nestjs/core",
@@ -11,12 +18,5 @@
       "esbuild",
       "msw"
     ]
-  },
-  "packageManager": "pnpm@11.0.8",
-  "devDependencies": {
-    "vite-plus": "catalog:"
-  },
-  "scripts": {
-    "prepare": "vp config"
   }
 }

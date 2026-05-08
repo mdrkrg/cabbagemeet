@@ -1,12 +1,12 @@
-import { Inject, Injectable } from '@nestjs/common';
-import User from '../users/user.entity';
-import { decryptText, encryptText } from './encryption';
-import JwtStrategy, { TokenPurpose } from './jwt.strategy';
+import { Inject, Injectable } from "@nestjs/common";
+import User from "../users/user.entity";
+import { decryptText, encryptText } from "./encryption";
+import JwtStrategy, { TokenPurpose } from "./jwt.strategy";
 
 @Injectable()
 export default class CustomJwtService {
   constructor(
-    @Inject('JWT_SIGNING_KEY') private secret: string,
+    @Inject("JWT_SIGNING_KEY") private secret: string,
     private jwtStrategy: JwtStrategy,
   ) {}
 

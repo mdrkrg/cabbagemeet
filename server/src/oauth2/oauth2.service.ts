@@ -1,36 +1,28 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import * as jwt from 'jsonwebtoken';
-import { request } from 'undici';
-import GoogleOAuth2 from './google-oauth2.entity';
-import { DataSource, Repository } from 'typeorm';
-import CacherService from '../cacher/cacher.service';
-import ConfigService from '../config/config.service';
-import type { DatabaseType } from '../config/env.validation';
-import {
-  getPlaceholders,
-  normalizeDBError,
-  UniqueConstraintFailed,
-} from '../database.utils';
-import { getSecondsSinceUnixEpoch } from '../dates.utils';
-import Meeting from '../meetings/meeting.entity';
-import MeetingsService from '../meetings/meetings.service';
-import { assert, assertIsNever, encodeQueryParams } from '../misc.utils';
-import User from '../users/user.entity';
-import { selectUserLeftJoinOAuth2Tables } from '../users/users.service';
-import AbstractOAuth2CalendarCreatedEvent from './abstract-oauth2-calendar-created-event.entity';
-import type {
-  OIDCResponse,
-  DecodedIDToken,
-  RefreshTokenResponse,
-} from './oauth2-response-types';
-import GoogleCalendarEvents from './google-calendar-events.entity';
+import { Injectable, Logger } from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import * as jwt from "jsonwebtoken";
+import { request } from "undici";
+import GoogleOAuth2 from "./google-oauth2.entity";
+import { DataSource, Repository } from "typeorm";
+import CacherService from "../cacher/cacher.service";
+import ConfigService from "../config/config.service";
+import type { DatabaseType } from "../config/env.validation";
+import { getPlaceholders, normalizeDBError, UniqueConstraintFailed } from "../database.utils";
+import { getSecondsSinceUnixEpoch } from "../dates.utils";
+import Meeting from "../meetings/meeting.entity";
+import MeetingsService from "../meetings/meetings.service";
+import { assert, assertIsNever, encodeQueryParams } from "../misc.utils";
+import User from "../users/user.entity";
+import { selectUserLeftJoinOAuth2Tables } from "../users/users.service";
+import AbstractOAuth2CalendarCreatedEvent from "./abstract-oauth2-calendar-created-event.entity";
+import type { OIDCResponse, DecodedIDToken, RefreshTokenResponse } from "./oauth2-response-types";
+import GoogleCalendarEvents from "./google-calendar-events.entity";
 import {
   OAuth2CalendarEvent,
   oauth2CreatedEventTableNamesMap,
   oauth2TableNamesMap,
-} from './oauth2-common';
-import GoogleCalendarCreatedEvent from './google-calendar-created-event.entity';
+} from "./oauth2-common";
+import GoogleCalendarCreatedEvent from "./google-calendar-created-event.entity";
 import {
   oauth2Reasons,
   OAuth2ProviderType,
@@ -39,13 +31,13 @@ import {
   OAuth2NoRefreshTokenError,
   OAuth2NotAllScopesGrantedError,
   OAuth2AccountAlreadyLinkedError,
-} from './oauth2-common';
-import GoogleOAuth2Provider from './google-oauth2-provider';
-import MicrosoftOAuth2Provider from './microsoft-oauth2-provider';
-import AbstractOAuth2 from './abstract-oauth2.entity';
-import MicrosoftOAuth2 from './microsoft-oauth2.entity';
-import MicrosoftCalendarEvents from './microsoft-calendar-events.entity';
-import MicrosoftCalendarCreatedEvent from './microsoft-calendar-created-event.entity';
+} from "./oauth2-common";
+import GoogleOAuth2Provider from "./google-oauth2-provider";
+import MicrosoftOAuth2Provider from "./microsoft-oauth2-provider";
+import AbstractOAuth2 from "./abstract-oauth2.entity";
+import MicrosoftOAuth2 from "./microsoft-oauth2.entity";
+import MicrosoftCalendarEvents from "./microsoft-calendar-events.entity";
+import MicrosoftCalendarCreatedEvent from "./microsoft-calendar-created-event.entity";
 
 // TODO: use truncated exponential backoff
 // See https://developers.google.com/calendar/api/guides/quota
@@ -97,7 +89,7 @@ export type OIDCLoginResult =
   | {
       type: OIDCLoginResultType.USER_DOES_NOT_EXIST_AND_NEED_A_NEW_REFRESH_TOKEN;
     };
-export type OAuth2Reason = typeof oauth2Reasons[number];
+export type OAuth2Reason = (typeof oauth2Reasons)[number];
 export type OAuth2State = {
   reason: OAuth2Reason;
   postRedirect: string;
@@ -117,9 +109,9 @@ export interface OAuth2Config {
 export interface PartialAuthzQueryParams {
   client_id: string;
   redirect_uri: string;
-  access_type?: 'offline'; // Google only
+  access_type?: "offline"; // Google only
   code_challenge?: string; // Microsoft only (PKCE)
-  code_challenge_method?: 'S256'; // Microsoft only (PKCE)
+  code_challenge_method?: "S256"; // Microsoft only (PKCE)
 
   // This isn't actually a query param; it gets inserted into the 'state' param.
   // Used only for Microsoft so that we can lookup the code verifier.
@@ -145,15 +137,10 @@ export interface IOAuth2Provider {
   getStaticOAuth2Config(): OAuth2Config;
   getScopesToExpectInResponse(): string[];
   getPartialAuthzQueryParams(): Promise<PartialAuthzQueryParams>;
-  getPartialTokenFormParams(
-    serverNonce?: string,
-  ): Promise<PartialTokenFormParams>;
+  getPartialTokenFormParams(serverNonce?: string): Promise<PartialTokenFormParams>;
   getPartialRefreshParams(): Promise<PartialRefreshParams>;
   setLinkedCalendarToTrue(user: User): void;
-  getEventsForMeeting(
-    creds: AbstractOAuth2,
-    meeting: Meeting,
-  ): Promise<OAuth2CalendarEvent[]>;
+  getEventsForMeeting(creds: AbstractOAuth2, meeting: Meeting): Promise<OAuth2CalendarEvent[]>;
   apiCreateOrUpdateEvent(
     creds: AbstractOAuth2,
     existingEvent: AbstractOAuth2CalendarCreatedEvent | null,
@@ -167,10 +154,7 @@ export default class OAuth2Service {
   private readonly logger = new Logger(OAuth2Service.name);
   private readonly dbType: DatabaseType;
   private readonly oauth2Providers: Record<OAuth2ProviderType, IOAuth2Provider>;
-  private readonly oauth2Repositories: Record<
-    OAuth2ProviderType,
-    Repository<AbstractOAuth2>
-  >;
+  private readonly oauth2Repositories: Record<OAuth2ProviderType, Repository<AbstractOAuth2>>;
   private readonly createdEventRepositories: Record<
     OAuth2ProviderType,
     Repository<AbstractOAuth2CalendarCreatedEvent>
@@ -195,7 +179,7 @@ export default class OAuth2Service {
     @InjectRepository(MicrosoftCalendarCreatedEvent)
     microsoftCalendarCreatedEventsRepository: Repository<MicrosoftCalendarCreatedEvent>,
   ) {
-    this.dbType = configService.get('DATABASE_TYPE');
+    this.dbType = configService.get("DATABASE_TYPE");
     this.oauth2Providers = {
       [OAuth2ProviderType.GOOGLE]: new GoogleOAuth2Provider(
         configService,
@@ -231,7 +215,7 @@ export default class OAuth2Service {
   }
 
   private async request(...args: Parameters<typeof request>) {
-    this.logger.debug(`${args[1]?.method || 'GET'} ${args[0]}`);
+    this.logger.debug(`${args[1]?.method || "GET"} ${args[0]}`);
     const response = await request(...args);
     const { statusCode, body } = response;
     if (!this.isSuccessStatusCode(statusCode)) {
@@ -243,10 +227,7 @@ export default class OAuth2Service {
       } catch (jsonErr) {}
       // If the token is expired or revoked, the Google API will return a 400 response like
       // {"error": "invalid_grant", "error_description": "Token has been expired or revoked."}
-      if (
-        typeof errorBody === 'object' &&
-        typeof errorBody.error === 'string'
-      ) {
+      if (typeof errorBody === "object" && typeof errorBody.error === "string") {
         errorCodeStr = errorBody.error;
       }
       this.logger.log(`statusCode=${statusCode} body=${errorText}`);
@@ -255,17 +236,12 @@ export default class OAuth2Service {
     return response;
   }
 
-  private async requestJSON<T>(
-    ...args: Parameters<typeof request>
-  ): Promise<T> {
+  private async requestJSON<T>(...args: Parameters<typeof request>): Promise<T> {
     return (await this.request(...args)).body.json() as T;
   }
 
-  private allRequestedScopesArePresent(
-    provider: IOAuth2Provider,
-    scopeStr: string,
-  ): boolean {
-    const responseScopes = scopeStr.split(' ');
+  private allRequestedScopesArePresent(provider: IOAuth2Provider, scopeStr: string): boolean {
+    const responseScopes = scopeStr.split(" ");
     const expectedScopes = provider.getScopesToExpectInResponse();
     return expectedScopes.every((scope) => responseScopes.includes(scope));
   }
@@ -281,9 +257,7 @@ export default class OAuth2Service {
   }
 
   private getSupportedProviders(): IOAuth2Provider[] {
-    return Object.values(this.oauth2Providers).filter((provider) =>
-      provider.isConfigured(),
-    );
+    return Object.values(this.oauth2Providers).filter((provider) => provider.isConfigured());
   }
 
   async getRequestURL(
@@ -293,22 +267,21 @@ export default class OAuth2Service {
   ): Promise<string> {
     const provider = this.getProvider(providerType);
     const { authzEndpoint, scopes } = provider.getStaticOAuth2Config();
-    const { serverNonce, ...partialParams } =
-      await provider.getPartialAuthzQueryParams();
+    const { serverNonce, ...partialParams } = await provider.getPartialAuthzQueryParams();
     if (serverNonce) {
       state.serverNonce = serverNonce;
     }
     const params: Record<string, string> = {
       ...partialParams,
-      response_type: 'code',
-      response_mode: 'query',
-      scope: scopes.join(' '),
+      response_type: "code",
+      response_mode: "query",
+      scope: scopes.join(" "),
       state: JSON.stringify(state),
     };
     if (promptConsent) {
-      params.prompt = 'consent';
+      params.prompt = "consent";
     }
-    return authzEndpoint + '?' + encodeQueryParams(params);
+    return authzEndpoint + "?" + encodeQueryParams(params);
   }
 
   private async getTokenFromCode(
@@ -320,21 +293,19 @@ export default class OAuth2Service {
     decodedIDToken: DecodedIDToken;
   }> {
     if (!provider.isConfigured()) throw new OAuth2NotConfiguredError();
-    const partialParams = await provider.getPartialTokenFormParams(
-      state.serverNonce,
-    );
+    const partialParams = await provider.getPartialTokenFormParams(state.serverNonce);
     const { tokenEndpoint } = provider.getStaticOAuth2Config();
     // See https://developers.google.com/identity/protocols/oauth2/web-server#exchange-authorization-code
     //     https://learn.microsoft.com/en-us/azure/active-directory/develop/v2-oauth2-auth-code-flow#request-an-access-token-with-a-certificate-credential
     const requestBody = this.encodeFormQueryParams({
       ...partialParams,
       code,
-      grant_type: 'authorization_code',
+      grant_type: "authorization_code",
     });
     const data = await this.requestJSON<OIDCResponse>(tokenEndpoint, {
-      method: 'POST',
+      method: "POST",
       body: requestBody,
-      headers: { 'content-type': 'application/x-www-form-urlencoded' },
+      headers: { "content-type": "application/x-www-form-urlencoded" },
     });
     this.logger.debug(data);
     // TODO: validate the ID token
@@ -353,15 +324,15 @@ export default class OAuth2Service {
     //     https://learn.microsoft.com/en-us/graph/auth-v2-user#request
     const requestBody = this.encodeFormQueryParams({
       ...partialParams,
-      grant_type: 'refresh_token',
+      grant_type: "refresh_token",
       refresh_token: creds.RefreshToken,
     });
     let data: RefreshTokenResponse | undefined;
     try {
       data = await this.requestJSON<RefreshTokenResponse>(tokenEndpoint, {
-        method: 'POST',
+        method: "POST",
         body: requestBody,
-        headers: { 'content-type': 'application/x-www-form-urlencoded' },
+        headers: { "content-type": "application/x-www-form-urlencoded" },
       });
     } catch (err: any) {
       await this.deleteCredsIfErrorIsInvalidToken(provider, err, creds);
@@ -386,7 +357,7 @@ export default class OAuth2Service {
       email?: string;
     },
   >(decodedIDToken: T) {
-    for (const claim of ['name', 'email'] as const) {
+    for (const claim of ["name", "email"] as const) {
       if (!decodedIDToken[claim]) {
         this.logger.error(`'${claim}' is missing from the ID token`);
         throw new OAuth2NoRefreshTokenError();
@@ -399,31 +370,20 @@ export default class OAuth2Service {
     code: string,
     state: OAuth2State,
   ): Promise<OIDCLoginResult> {
-    assert(
-      state.reason === 'login',
-      `state.reason = '${state.reason}', expected 'login'`,
-    );
+    assert(state.reason === "login", `state.reason = '${state.reason}', expected 'login'`);
     const provider = this.getProvider(providerType);
     const oauth2ClassName = oauth2EntityClasses[providerType].name;
     const oauth2Repository = this.oauth2Repositories[providerType];
-    const { data, decodedIDToken } = await this.getTokenFromCode(
-      provider,
-      code,
-      state,
-    );
+    const { data, decodedIDToken } = await this.getTokenFromCode(provider, code, state);
     this.checkThatNameAndEmailClaimsArePresent(decodedIDToken);
-    const userBySub: User | null = await selectUserLeftJoinOAuth2Tables(
-      this.usersRepository,
-    )
+    const userBySub: User | null = await selectUserLeftJoinOAuth2Tables(this.usersRepository)
       .where(`${oauth2ClassName}.Sub = :sub`, { sub: decodedIDToken.sub })
       .getOne();
     if (userBySub) {
       // update the credentials stored in the database
       const partialCreds: Partial<AbstractOAuth2> = {
         AccessToken: data.access_token,
-        AccessTokenExpiresAt: this.calculateTokenExpirationTime(
-          data.expires_in,
-        ),
+        AccessTokenExpiresAt: this.calculateTokenExpirationTime(data.expires_in),
       };
       if (data.refresh_token) {
         partialCreds.RefreshToken = data.refresh_token;
@@ -434,21 +394,15 @@ export default class OAuth2Service {
         user: userBySub,
       };
     }
-    const userByEmail: User | null = await selectUserLeftJoinOAuth2Tables(
-      this.usersRepository,
-    )
-      .where('User.Email = :email', { email: decodedIDToken.email! })
+    const userByEmail: User | null = await selectUserLeftJoinOAuth2Tables(this.usersRepository)
+      .where("User.Email = :email", { email: decodedIDToken.email! })
       .getOne();
     if (userByEmail) {
       if (data.refresh_token) {
         return {
           type: OIDCLoginResultType.USER_EXISTS_BUT_IS_NOT_LINKED,
           user: userByEmail,
-          pendingOAuth2Entity: this.createPartialOAuth2Entity(
-            userByEmail.ID,
-            data,
-            decodedIDToken,
-          ),
+          pendingOAuth2Entity: this.createPartialOAuth2Entity(userByEmail.ID, data, decodedIDToken),
         };
       } else {
         return {
@@ -504,16 +458,8 @@ export default class OAuth2Service {
     state: OAuth2State,
   ): Promise<User> {
     const provider = this.getProvider(providerType);
-    const { data, decodedIDToken } = await this.getTokenFromCode(
-      provider,
-      code,
-      state,
-    );
-    return this.updateDatabaseFromOIDCResponseForSignup(
-      provider,
-      data,
-      decodedIDToken,
-    );
+    const { data, decodedIDToken } = await this.getTokenFromCode(provider, code, state);
+    return this.updateDatabaseFromOIDCResponseForSignup(provider, data, decodedIDToken);
   }
 
   async fetchAndStoreUserInfoForLinking(
@@ -522,11 +468,7 @@ export default class OAuth2Service {
     state: OAuth2State,
   ) {
     const provider = this.getProvider(providerType);
-    const { data, decodedIDToken } = await this.getTokenFromCode(
-      provider,
-      code,
-      state,
-    );
+    const { data, decodedIDToken } = await this.getTokenFromCode(provider, code, state);
     await this.updateDatabaseFromOIDCResponseForLinking(
       provider,
       state.userID!,
@@ -535,16 +477,13 @@ export default class OAuth2Service {
     );
   }
 
-  private checkThatRefreshTokenAndScopesArePresent(
-    provider: IOAuth2Provider,
-    data: OIDCResponse,
-  ) {
+  private checkThatRefreshTokenAndScopesArePresent(provider: IOAuth2Provider, data: OIDCResponse) {
     if (!data.refresh_token) {
-      this.logger.log('Refresh token was not present');
+      this.logger.log("Refresh token was not present");
       throw new OAuth2NoRefreshTokenError();
     }
     if (!this.allRequestedScopesArePresent(provider, data.scope)) {
-      this.logger.log('Not all requested scopes were present: ' + data.scope);
+      this.logger.log("Not all requested scopes were present: " + data.scope);
       throw new OAuth2NotAllScopesGrantedError();
     }
   }
@@ -592,9 +531,7 @@ export default class OAuth2Service {
     this.checkThatNameAndEmailClaimsArePresent(decodedIDToken);
     const repository = this.oauth2Repositories[provider.type];
     try {
-      await repository.insert(
-        this.createPartialOAuth2Entity(userID, data, decodedIDToken),
-      );
+      await repository.insert(this.createPartialOAuth2Entity(userID, data, decodedIDToken));
     } catch (err: any) {
       err = normalizeDBError(err as Error, this.dbType);
       if (err instanceof UniqueConstraintFailed) {
@@ -641,12 +578,10 @@ export default class OAuth2Service {
     if (
       err instanceof OAuth2ErrorResponseError &&
       ((err as OAuth2ErrorResponseError).statusCode === 401 ||
-        (err as OAuth2ErrorResponseError).errorCode === 'invalid_grant')
+        (err as OAuth2ErrorResponseError).errorCode === "invalid_grant")
     ) {
       // Invalid authentication credentials. Assume that the user revoked access
-      this.logger.warn(
-        `Invalid credentials for userID=${creds.UserID}. Deleting all OAuth2 data.`,
-      );
+      this.logger.warn(`Invalid credentials for userID=${creds.UserID}. Deleting all OAuth2 data.`);
       const oauth2Repository = this.oauth2Repositories[provider.type];
       await oauth2Repository.delete(creds.UserID);
     }
@@ -665,17 +600,17 @@ export default class OAuth2Service {
       args[1].headers = {};
     }
     if (Array.isArray(args[1].headers)) {
-      args[1].headers.push('authorization', `Bearer ${accessToken}`);
+      args[1].headers.push("authorization", `Bearer ${accessToken}`);
     } else {
       args[1].headers.authorization = `Bearer ${accessToken}`;
     }
     try {
       const { headers, body } = await this.request(...args);
-      const contentType = Array.isArray(headers['content-type'])
-        ? headers['content-type'][0]
-        : headers['content-type'];
+      const contentType = Array.isArray(headers["content-type"])
+        ? headers["content-type"][0]
+        : headers["content-type"];
       // The content-type can be e.g. "application/json; charset=UTF-8"
-      if (contentType?.startsWith('application/json')) {
+      if (contentType?.startsWith("application/json")) {
         return body.json() as T;
       } else {
         // Some API endpoints, like deleting an event, return no response body
@@ -687,11 +622,7 @@ export default class OAuth2Service {
     }
   }
 
-  async unlinkAccount(
-    providerType: OAuth2ProviderType,
-    user: User,
-    deletingAccount = false,
-  ) {
+  async unlinkAccount(providerType: OAuth2ProviderType, user: User, deletingAccount = false) {
     const provider = this.getProvider(providerType);
     const oauth2Repository = this.oauth2Repositories[providerType];
     const creds = await oauth2Repository.findOneBy({ UserID: user.ID });
@@ -703,14 +634,9 @@ export default class OAuth2Service {
       // If they originally signed up via an OAuth2 provider, then we'll delete
       // the calendar data, but keep the OAuth2 token so that they can still sign in.
       const oauth2EntityClass = oauth2EntityClasses[providerType];
-      const calendarEventsEntityClass =
-        calendarEventsEntityClasses[providerType];
+      const calendarEventsEntityClass = calendarEventsEntityClasses[providerType];
       await this.dataSource.transaction(async (manager) => {
-        await manager.update(
-          oauth2EntityClass,
-          { UserID: user.ID },
-          { LinkedCalendar: false },
-        );
+        await manager.update(oauth2EntityClass, { UserID: user.ID }, { LinkedCalendar: false });
         await manager.delete(calendarEventsEntityClass, { UserID: user.ID });
       });
       return;
@@ -720,9 +646,9 @@ export default class OAuth2Service {
     if (revokeEndpoint) {
       // See https://developers.google.com/identity/protocols/oauth2/web-server#tokenrevoke
       await this.request(revokeEndpoint, {
-        method: 'POST',
+        method: "POST",
         body: this.encodeFormQueryParams({ token: creds.RefreshToken }),
-        headers: { 'content-type': 'application/x-www-form-urlencoded' },
+        headers: { "content-type": "application/x-www-form-urlencoded" },
       });
     }
     await oauth2Repository.delete(user.ID);
@@ -730,13 +656,11 @@ export default class OAuth2Service {
 
   async unlinkAllOAuth2AccountsForDeletion(user: User) {
     const results = await Promise.allSettled(
-      this.getSupportedProviders().map((provider) =>
-        this.unlinkAccount(provider.type, user, true),
-      ),
+      this.getSupportedProviders().map((provider) => this.unlinkAccount(provider.type, user, true)),
     );
     for (const result of results) {
-      if (result.status === 'rejected') {
-        this.logger.error('unlinkAllOAuth2AccountsForDeletion failed:');
+      if (result.status === "rejected") {
+        this.logger.error("unlinkAllOAuth2AccountsForDeletion failed:");
         this.logger.error(result.reason);
       }
     }
@@ -781,8 +705,7 @@ export default class OAuth2Service {
     userID?: number;
   }): Promise<AbstractOAuth2[]> {
     const oauth2TableName = oauth2TableNamesMap[provider.type];
-    const createdEventTableName =
-      oauth2CreatedEventTableNamesMap[provider.type];
+    const createdEventTableName = oauth2CreatedEventTableNamesMap[provider.type];
     // Despite best efforts, I was unable to build this query using the
     // TypeORM query builder. It would require setting up a relation
     // between the OAuth2 tables and the MeetingRespondent table without
@@ -798,19 +721,19 @@ export default class OAuth2Service {
     const selectCols =
       AbstractOAuth2.getColumnNames()
         .map((col) => `${oauth2TableName}.${col} AS "${col}"`)
-        .join(', ') +
+        .join(", ") +
       `, MeetingRespondent.RespondentID AS "RespondentID"` +
       `, ${createdEventTableName}.CreatedEventID AS "CreatedEventID"`;
     const rows = (await this.dataSource.query(
       `
       SELECT ${selectCols} FROM ${oauth2TableName}
-      ${mustBeRespondent ? 'INNER' : 'LEFT'} JOIN MeetingRespondent
+      ${mustBeRespondent ? "INNER" : "LEFT"} JOIN MeetingRespondent
         ON ${oauth2TableName}.UserID = MeetingRespondent.UserID
         AND MeetingRespondent.MeetingID = ${placeholders[0]}
-      ${mustHaveCreatedEvent ? 'INNER' : 'LEFT'} JOIN ${createdEventTableName}
+      ${mustHaveCreatedEvent ? "INNER" : "LEFT"} JOIN ${createdEventTableName}
         ON MeetingRespondent.RespondentID = ${createdEventTableName}.RespondentID
       WHERE ${oauth2TableName}.LinkedCalendar
-      ${userID ? `AND ${oauth2TableName}.UserID = ${placeholders[1]}` : ''}
+      ${userID ? `AND ${oauth2TableName}.UserID = ${placeholders[1]}` : ""}
     `,
       placeholderValues,
     )) as (AbstractOAuth2 & { CreatedEventID: string })[];
@@ -847,18 +770,14 @@ export default class OAuth2Service {
         this.createOrUpdateEventForMeeting(
           provider,
           linkedRespondent,
-          linkedRespondent.CreatedEvents.length > 0
-            ? linkedRespondent.CreatedEvents[0]
-            : null,
+          linkedRespondent.CreatedEvents.length > 0 ? linkedRespondent.CreatedEvents[0] : null,
           meeting,
         ),
       ),
     );
     for (const result of results) {
-      if (result.status === 'rejected') {
-        this.logger.error(
-          'tryCreateOrUpdateEventsForMeetingForAllRespondents_provider failed:',
-        );
+      if (result.status === "rejected") {
+        this.logger.error("tryCreateOrUpdateEventsForMeetingForAllRespondents_provider failed:");
         this.logger.error(result.reason);
       }
     }
@@ -867,25 +786,17 @@ export default class OAuth2Service {
   async tryCreateOrUpdateEventsForMeetingForAllRespondents(
     meeting: Meeting,
   ): Promise<PromiseSettledResult<void>[]> {
-    if (
-      meeting.ScheduledStartDateTime === null ||
-      meeting.ScheduledEndDateTime === null
-    ) {
+    if (meeting.ScheduledStartDateTime === null || meeting.ScheduledEndDateTime === null) {
       return;
     }
     const results = await Promise.allSettled(
       this.getSupportedProviders().map((provider) =>
-        this.tryCreateOrUpdateEventsForMeetingForAllRespondents_provider(
-          provider,
-          meeting,
-        ),
+        this.tryCreateOrUpdateEventsForMeetingForAllRespondents_provider(provider, meeting),
       ),
     );
     for (const result of results) {
-      if (result.status === 'rejected') {
-        this.logger.error(
-          'tryCreateOrUpdateEventsForMeetingForAllRespondents failed:',
-        );
+      if (result.status === "rejected") {
+        this.logger.error("tryCreateOrUpdateEventsForMeetingForAllRespondents failed:");
         this.logger.error(result.reason);
       }
     }
@@ -897,10 +808,7 @@ export default class OAuth2Service {
     existingEvent: AbstractOAuth2CalendarCreatedEvent,
     meeting: Meeting,
   ): Promise<void> {
-    if (
-      meeting.ScheduledStartDateTime === null ||
-      meeting.ScheduledEndDateTime === null
-    ) {
+    if (meeting.ScheduledStartDateTime === null || meeting.ScheduledEndDateTime === null) {
       return;
     }
     creds = await this.refreshCredsIfNecessary(provider, creds);
@@ -908,22 +816,17 @@ export default class OAuth2Service {
     // Note that the eventID might change even if an event previously existed,
     // e.g. if the user deleted the old event themselves and we had to create
     // a new one.
-    const eventID = await provider.apiCreateOrUpdateEvent(
-      creds,
-      existingEvent,
-      meeting,
-    );
+    const eventID = await provider.apiCreateOrUpdateEvent(creds, existingEvent, meeting);
     if (existingEvent && existingEvent.CreatedEventID === eventID) {
       return;
     }
-    const createdEventTableName =
-      oauth2CreatedEventTableNamesMap[provider.type];
+    const createdEventTableName = oauth2CreatedEventTableNamesMap[provider.type];
     if (existingEvent) {
       // TypeORM does not support joins in UPDATE statements
       // See https://github.com/typeorm/typeorm/issues/564#issuecomment-310331468
       const placeholders = getPlaceholders(2, this.dbType);
       let rowsAffected = 0;
-      if (this.dbType === 'mariadb') {
+      if (this.dbType === "mariadb") {
         const result = await this.dataSource.query(
           `
           UPDATE ${createdEventTableName}
@@ -947,7 +850,7 @@ export default class OAuth2Service {
         //   changedRows: 1
         // }
         rowsAffected = result.affectedRows;
-      } else if (this.dbType === 'postgres' || this.dbType === 'sqlite') {
+      } else if (this.dbType === "postgres" || this.dbType === "sqlite") {
         const result = await this.dataSource.query(
           `
           UPDATE ${createdEventTableName}
@@ -961,23 +864,18 @@ export default class OAuth2Service {
         `,
           [eventID, respondentID],
         );
-        if (this.dbType === 'postgres') {
+        if (this.dbType === "postgres") {
           // If row was updated: [ [ { '?column?': 1 } ], 1 ]
           // Otherwise: [ [], 0 ]
           assert(
-            Array.isArray(result) &&
-              result.length === 2 &&
-              typeof result[1] === 'number',
-            'Unexpected format of Postgres update result',
+            Array.isArray(result) && result.length === 2 && typeof result[1] === "number",
+            "Unexpected format of Postgres update result",
           );
           rowsAffected = result[1];
         } else {
           // If row was updated: [ {'1': 1} ]
           // Otherwise: []
-          assert(
-            Array.isArray(result),
-            'Unexpected format of SQLite update result',
-          );
+          assert(Array.isArray(result), "Unexpected format of SQLite update result");
           rowsAffected = result.length;
         }
       } else {
@@ -985,7 +883,7 @@ export default class OAuth2Service {
       }
       if (rowsAffected === 0) {
         this.logger.log(
-          'Did not update event: meeting was unscheduled/deleted or respondent' +
+          "Did not update event: meeting was unscheduled/deleted or respondent" +
             ` was deleted (respondentID=${respondentID})`,
         );
         await provider.apiDeleteEvent(creds, eventID);
@@ -1018,7 +916,7 @@ export default class OAuth2Service {
       // mariadb: [ {'1': 1} ]
       if (result.length === 0) {
         this.logger.log(
-          'Did not insert event: meeting was unscheduled/deleted or respondent' +
+          "Did not insert event: meeting was unscheduled/deleted or respondent" +
             ` was deleted (respondentID=${respondentID})`,
         );
         await provider.apiDeleteEvent(creds, eventID);
@@ -1050,21 +948,13 @@ export default class OAuth2Service {
         meeting,
       );
     } catch (err: any) {
-      this.logger.error(
-        'tryCreateOrUpdateEventsForMeetingForSingleRespondent_provider failed:',
-      );
+      this.logger.error("tryCreateOrUpdateEventsForMeetingForSingleRespondent_provider failed:");
       this.logger.error(err);
     }
   }
 
-  async tryCreateOrUpdateEventsForMeetingForSingleRespondent(
-    userID: number,
-    meeting: Meeting,
-  ) {
-    if (
-      meeting.ScheduledStartDateTime === null ||
-      meeting.ScheduledEndDateTime === null
-    ) {
+  async tryCreateOrUpdateEventsForMeetingForSingleRespondent(userID: number, meeting: Meeting) {
+    if (meeting.ScheduledStartDateTime === null || meeting.ScheduledEndDateTime === null) {
       return;
     }
     const results = await Promise.allSettled(
@@ -1077,10 +967,8 @@ export default class OAuth2Service {
       ),
     );
     for (const result of results) {
-      if (result.status === 'rejected') {
-        this.logger.error(
-          'tryCreateOrUpdateEventsForMeetingForSingleRespondent failed:',
-        );
+      if (result.status === "rejected") {
+        this.logger.error("tryCreateOrUpdateEventsForMeetingForSingleRespondent failed:");
         this.logger.error(result.reason);
       }
     }
@@ -1101,10 +989,7 @@ export default class OAuth2Service {
     });
   }
 
-  private async tryDeleteEventsForMeeting_provider(
-    provider: IOAuth2Provider,
-    meetingID: number,
-  ) {
+  private async tryDeleteEventsForMeeting_provider(provider: IOAuth2Provider, meetingID: number) {
     const linkedRespondents = await this.getOAuth2LinkedRespondents({
       provider,
       meetingID,
@@ -1112,16 +997,12 @@ export default class OAuth2Service {
     });
     const results = await Promise.allSettled(
       linkedRespondents.map((linkedRespondent) =>
-        this.deleteEventForMeeting(
-          provider,
-          linkedRespondent,
-          linkedRespondent.CreatedEvents[0],
-        ),
+        this.deleteEventForMeeting(provider, linkedRespondent, linkedRespondent.CreatedEvents[0]),
       ),
     );
     for (const result of results) {
-      if (result.status === 'rejected') {
-        this.logger.error('tryDeleteEventsForMeeting_provider failed:');
+      if (result.status === "rejected") {
+        this.logger.error("tryDeleteEventsForMeeting_provider failed:");
         this.logger.error(result.reason);
       }
     }
@@ -1134,8 +1015,8 @@ export default class OAuth2Service {
       ),
     );
     for (const result of results) {
-      if (result.status === 'rejected') {
-        this.logger.error('tryDeleteEventsForMeetingForAllRespondents failed:');
+      if (result.status === "rejected") {
+        this.logger.error("tryDeleteEventsForMeetingForAllRespondents failed:");
         this.logger.error(result.reason);
       }
     }
@@ -1160,31 +1041,20 @@ export default class OAuth2Service {
     try {
       await this.deleteEventForMeeting(provider, creds, creds.CreatedEvents[0]);
     } catch (err: any) {
-      this.logger.error(
-        'tryDeleteEventsForMeetingForSingleRespondent_provider failed:',
-      );
+      this.logger.error("tryDeleteEventsForMeetingForSingleRespondent_provider failed:");
       this.logger.error(err);
     }
   }
 
-  async tryDeleteEventsForMeetingForSingleRespondent(
-    userID: number,
-    meetingID: number,
-  ) {
+  async tryDeleteEventsForMeetingForSingleRespondent(userID: number, meetingID: number) {
     const results = await Promise.allSettled(
       this.getSupportedProviders().map((provider) =>
-        this.tryDeleteEventsForMeetingForSingleRespondent_provider(
-          provider,
-          userID,
-          meetingID,
-        ),
+        this.tryDeleteEventsForMeetingForSingleRespondent_provider(provider, userID, meetingID),
       ),
     );
     for (const result of results) {
-      if (result.status === 'rejected') {
-        this.logger.error(
-          'tryDeleteEventsForMeetingForSingleRespondent failed:',
-        );
+      if (result.status === "rejected") {
+        this.logger.error("tryDeleteEventsForMeetingForSingleRespondent failed:");
         this.logger.error(result.reason);
       }
     }

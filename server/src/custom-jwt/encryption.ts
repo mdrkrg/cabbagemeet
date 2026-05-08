@@ -1,12 +1,7 @@
-import {
-  createCipheriv,
-  createDecipheriv,
-  randomBytes,
-  scrypt as scryptCb,
-} from 'crypto';
-import { promisify } from 'util';
+import { createCipheriv, createDecipheriv, randomBytes, scrypt as scryptCb } from "crypto";
+import { promisify } from "util";
 
-const CIPHER_ALGORITHM = 'aes-128-gcm';
+const CIPHER_ALGORITHM = "aes-128-gcm";
 const KEY_LENGTH = 16;
 const scrypt = promisify(scryptCb);
 
@@ -38,9 +33,6 @@ export async function decryptText(
   const key = (await scrypt(secret, salt, KEY_LENGTH)) as Buffer;
   const decipher = createDecipheriv(CIPHER_ALGORITHM, key, iv);
   decipher.setAuthTag(tag);
-  const decryptedBuffer = Buffer.concat([
-    decipher.update(encrypted),
-    decipher.final(),
-  ]);
-  return decryptedBuffer.toString('utf8');
+  const decryptedBuffer = Buffer.concat([decipher.update(encrypted), decipher.final()]);
+  return decryptedBuffer.toString("utf8");
 }

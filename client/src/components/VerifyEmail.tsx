@@ -6,15 +6,15 @@ import useEffectOnce from "utils/useEffectOnce.hook";
 import GenericSpinner from "./GenericSpinner";
 
 export default function VerifyEmail() {
-  const [verifyEmail, { isSuccess, error}] = useVerifyEmailMutation();
+  const [verifyEmail, { isSuccess, error }] = useVerifyEmailMutation();
   const [searchParams] = useSearchParams();
-  const encrypted_entity = searchParams.get('encrypted_entity');
-  const iv = searchParams.get('iv');
-  const salt = searchParams.get('salt');
-  const tag = searchParams.get('tag');
+  const encrypted_entity = searchParams.get("encrypted_entity");
+  const iv = searchParams.get("iv");
+  const salt = searchParams.get("salt");
+  const tag = searchParams.get("tag");
   const urlIsValid = !!(encrypted_entity && iv && salt && tag);
 
-  useSetTitle('Verify Email Address');
+  useSetTitle("Verify Email Address");
 
   useEffectOnce(() => {
     if (!urlIsValid) return;
@@ -27,26 +27,20 @@ export default function VerifyEmail() {
   }, [urlIsValid, verifyEmail]);
 
   if (!isSuccess && !urlIsValid) {
-    return (
-      <p>The URL is invalid.</p>
-    );
+    return <p>The URL is invalid.</p>;
   }
 
   if (error) {
-    return (
-      <p className="mt-3">
-        An error occurred: {getReqErrorMessage(error)}
-      </p>
-    );
+    return <p className="mt-3">An error occurred: {getReqErrorMessage(error)}</p>;
   }
 
   if (isSuccess) {
     return (
       <p>
-        Your email address was successfully verified. You may now proceed
-        to <Link to="/login">the login page</Link>.
+        Your email address was successfully verified. You may now proceed to{" "}
+        <Link to="/login">the login page</Link>.
       </p>
-    )
+    );
   }
 
   return <GenericSpinner />;

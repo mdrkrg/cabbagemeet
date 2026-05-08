@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 export default function NonFocusButton(props: React.ButtonHTMLAttributes<HTMLButtonElement>) {
   const origOnClick = props.onClick;
@@ -7,7 +7,7 @@ export default function NonFocusButton(props: React.ButtonHTMLAttributes<HTMLBut
       origOnClick(ev);
     }
     (ev.target as HTMLButtonElement).blur();
-  }
-  const newProps: React.ButtonHTMLAttributes<HTMLButtonElement> = {...props, onClick};
+  };
+  const newProps: React.ButtonHTMLAttributes<HTMLButtonElement> = { ...props, onClick };
   return <button {...newProps} />;
 }

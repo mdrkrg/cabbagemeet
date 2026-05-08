@@ -10,6 +10,6 @@ export default function useEffectOnce(...args: Parameters<typeof useEffect>) {
     if (ran.current) return;
     callback();
     ran.current = true;
-  // eslint-disable-next-line
+    // eslint-disable-next-line
   }, deps);
 }

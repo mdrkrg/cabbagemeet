@@ -9,27 +9,25 @@ import useSetTitle from "utils/title.hook";
 
 export default function ConfirmPasswordReset() {
   const [searchParams] = useSearchParams();
-  const [password, setPassword] = useState('');
-  const [passwordConfirmation, setPasswordConfirmation] = useState('');
+  const [password, setPassword] = useState("");
+  const [passwordConfirmation, setPasswordConfirmation] = useState("");
   const [validated, setValidated] = useState(false);
-  const [confirmReset, {isLoading, isSuccess, error}] = useConfirmPasswordResetMutation();
-  const token = searchParams.get('pwresetToken');
+  const [confirmReset, { isLoading, isSuccess, error }] = useConfirmPasswordResetMutation();
+  const token = searchParams.get("pwresetToken");
 
-  useSetTitle('Confirm Password Reset');
+  useSetTitle("Confirm Password Reset");
 
   if (!token) {
-    return (
-      <p>The URL is not valid.</p>
-    );
+    return <p>The URL is not valid.</p>;
   }
 
   if (isSuccess) {
     return (
       <p>
-        Your password was successfully reset. You may now proceed
-        to <Link to="/login">the login page</Link>.
+        Your password was successfully reset. You may now proceed to{" "}
+        <Link to="/login">the login page</Link>.
       </p>
-    )
+    );
   }
 
   const passwordIsValid = password.length >= 6 && password.length <= 30;
@@ -41,14 +39,14 @@ export default function ConfirmPasswordReset() {
     onSubmit = (ev) => {
       ev.preventDefault();
       if (passwordIsValid && passwordConfirmationIsValid) {
-        confirmReset({token, password});
+        confirmReset({ token, password });
       } else {
         setValidated(true);
       }
     };
   }
   return (
-    <div className="align-self-center" style={{width: 'min(100%, 600px)'}}>
+    <div className="align-self-center" style={{ width: "min(100%, 600px)" }}>
       <h3>Password Reset Confirmation</h3>
       <hr className="my-4" />
       {/*
@@ -81,9 +79,7 @@ export default function ConfirmPasswordReset() {
             value={passwordConfirmation}
             onChange={(ev) => setPasswordConfirmation(ev.target.value)}
           />
-          <Form.Control.Feedback type="invalid">
-            Does not match password
-          </Form.Control.Feedback>
+          <Form.Control.Feedback type="invalid">Does not match password</Form.Control.Feedback>
         </Form.Group>
         <ButtonWithSpinner
           type="submit"

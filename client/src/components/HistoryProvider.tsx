@@ -4,7 +4,11 @@ import { useLocation } from "react-router-dom";
 // The idea is that after a user logs in or signs up, we want to redirect
 // them to the last page they visited *before* the login/signup page.
 const doNotRedirectToThesePaths = [
-  '/signup', '/login', '/verify-email', '/confirm-password-reset', '/error'
+  "/signup",
+  "/login",
+  "/verify-email",
+  "/confirm-password-reset",
+  "/error",
 ];
 
 export type HistoryContextType = {
@@ -12,20 +16,16 @@ export type HistoryContextType = {
 };
 
 export const HistoryContext = React.createContext<HistoryContextType>({
-  lastNonAuthPath: '/',
+  lastNonAuthPath: "/",
 });
 
-export default function HistoryProvider({children}: React.PropsWithChildren<{}>) {
+export default function HistoryProvider({ children }: React.PropsWithChildren<{}>) {
   const location = useLocation();
-  const [lastNonAuthPath, setLastNonAuthPath] = useState('/');
+  const [lastNonAuthPath, setLastNonAuthPath] = useState("/");
   useEffect(() => {
-    if (doNotRedirectToThesePaths.every(authPath => location.pathname !== authPath)) {
+    if (doNotRedirectToThesePaths.every((authPath) => location.pathname !== authPath)) {
       setLastNonAuthPath(location.pathname);
     }
   }, [location.pathname]);
-  return (
-    <HistoryContext.Provider value={{lastNonAuthPath}}>
-      {children}
-    </HistoryContext.Provider>
-  );
+  return <HistoryContext.Provider value={{ lastNonAuthPath }}>{children}</HistoryContext.Provider>;
 }

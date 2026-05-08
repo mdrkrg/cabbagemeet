@@ -1,5 +1,5 @@
-import { Column, PrimaryColumn, Index } from 'typeorm';
-import type AbstractOAuth2CalendarCreatedEvent from './abstract-oauth2-calendar-created-event.entity';
+import { Column, PrimaryColumn, Index } from "typeorm";
+import type AbstractOAuth2CalendarCreatedEvent from "./abstract-oauth2-calendar-created-event.entity";
 
 export default abstract class AbstractOAuth2 {
   @PrimaryColumn()
@@ -15,14 +15,14 @@ export default abstract class AbstractOAuth2 {
   @Column()
   Sub: string;
 
-  @Column({ type: 'text' })
+  @Column({ type: "text" })
   AccessToken: string;
 
   // Unix epoch timestamp in seconds
   @Column()
   AccessTokenExpiresAt: number;
 
-  @Column({ type: 'text' })
+  @Column({ type: "text" })
   RefreshToken: string;
 
   // Exact type depends on implementation
@@ -34,12 +34,12 @@ export default abstract class AbstractOAuth2 {
   static getColumnNames(): string[] {
     // Needed for building a raw SQL query
     return [
-      'UserID',
-      'LinkedCalendar',
-      'Sub',
-      'AccessToken',
-      'AccessTokenExpiresAt',
-      'RefreshToken',
+      "UserID",
+      "LinkedCalendar",
+      "Sub",
+      "AccessToken",
+      "AccessTokenExpiresAt",
+      "RefreshToken",
     ];
   }
 }

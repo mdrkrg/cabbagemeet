@@ -1,6 +1,6 @@
-import { DateTime } from 'luxon';
-import { useMemo } from 'react';
-import { assert } from './misc.utils';
+import { DateTime } from "luxon";
+import { useMemo } from "react";
+import { assert } from "./misc.utils";
 
 let today = new Date();
 // For unit testing
@@ -33,7 +33,7 @@ export const ianaTzName = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
 export function getTzAbbr(date: Date): string {
   // from https://stackoverflow.com/a/34405528
-  return date.toLocaleTimeString('en-us', {timeZoneName: 'short'}).split(' ')[2];
+  return date.toLocaleTimeString("en-us", { timeZoneName: "short" }).split(" ")[2];
 }
 
 // This is the offset from UTC time for the local time. For example, if the local
@@ -43,7 +43,7 @@ export function getTzAbbr(date: Date): string {
 // This value must be ADDED to UTC time to obtain a local time.
 // TODO: only accept a Date
 export function getUTCOffsetHours(date: Date | string): number {
-  if (typeof date === 'string') {
+  if (typeof date === "string") {
     date = getDateFromString(date);
   }
   return -(date.getTimezoneOffset() / 60);
@@ -63,17 +63,17 @@ export function getDateString(year: number, month: number, day: number): string;
 export function getDateString(date: Date): string;
 export function getDateString(yearOrDate: number | Date, month?: number, day?: number): string {
   let year: number | undefined;
-  if (typeof yearOrDate !== 'number') {
-      const date = yearOrDate;
-      year = date.getFullYear();
-      month = date.getMonth() + 1;
-      day = date.getDate();
+  if (typeof yearOrDate !== "number") {
+    const date = yearOrDate;
+    year = date.getFullYear();
+    month = date.getMonth() + 1;
+    day = date.getDate();
   } else {
-      year = yearOrDate;
+    year = yearOrDate;
   }
   const YYYY = String(year);
-  const MM = String(month).padStart(2, '0');
-  const DD = String(day).padStart(2, '0');
+  const MM = String(month).padStart(2, "0");
+  const DD = String(day).padStart(2, "0");
   return `${YYYY}-${MM}-${DD}`;
 }
 
@@ -86,19 +86,19 @@ export function getDateFromString(dateStr: string): Date {
   // that will assume midnight at UTC, which, if you're in the Western
   // hemisphere, will actually be yesterday in local time
   const [year, month, day] = getYearMonthDayFromDateString(dateStr);
-  return new Date(year, month-1, day);
+  return new Date(year, month - 1, day);
 }
 
 export function customToISOString(date: Date): string;
 export function customToISOString(dateString: string, hour: number, minute: number): string;
 export function customToISOString(date: Date | string, hour?: number, minute?: number): string {
-  if (typeof date === 'string') {
+  if (typeof date === "string") {
     // From https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/Date:
     // "date-time strings (e.g. "1970-01-01T12:00") are treated as local"
-    const HH = String(hour).padStart(2, '0');
-    const mm = String(minute).padStart(2, '0');
-    const ss = '00';
-    date = new Date(`${date}T${HH}:${mm}:${ss}`);  // in local time
+    const HH = String(hour).padStart(2, "0");
+    const mm = String(minute).padStart(2, "0");
+    const ss = "00";
+    date = new Date(`${date}T${HH}:${mm}:${ss}`); // in local time
   }
   const year = date.getUTCFullYear();
   const month = date.getUTCMonth() + 1;
@@ -107,11 +107,11 @@ export function customToISOString(date: Date | string, hour?: number, minute?: n
   minute = date.getUTCMinutes();
 
   const YYYY = String(year);
-  const MM = String(month).padStart(2, '0');
-  const DD = String(day).padStart(2, '0');
-  const HH = String(hour).padStart(2, '0');
-  const mm = String(minute).padStart(2, '0');
-  const ss = '00';
+  const MM = String(month).padStart(2, "0");
+  const DD = String(day).padStart(2, "0");
+  const HH = String(hour).padStart(2, "0");
+  const mm = String(minute).padStart(2, "0");
+  const ss = "00";
   return `${YYYY}-${MM}-${DD}T${HH}:${mm}:${ss}Z`;
 }
 
@@ -121,7 +121,7 @@ export function customToISOString(date: Date | string, hour?: number, minute?: n
  * @returns [year, month, day]
  */
 export function getYearMonthDayFromDateString(date: string): [number, number, number] {
-  return date.split('-').map(s => parseInt(s)) as [number, number, number];
+  return date.split("-").map((s) => parseInt(s)) as [number, number, number];
 }
 
 export function getLocalYearMonthDayFromDate(date: Date): [number, number, number] {
@@ -129,7 +129,7 @@ export function getLocalYearMonthDayFromDate(date: Date): [number, number, numbe
 }
 
 export function to12HourClock(n: number) {
-  return (n === 0 || n === 12) ? 12 : (n % 12);
+  return n === 0 || n === 12 ? 12 : n % 12;
 }
 
 export function floorTowardsZero(val: number): number {
@@ -162,19 +162,17 @@ export function convertDateTimeStringToHourDecimal(dateTime: string): number {
   return date.getHours() + date.getMinutes() / 60;
 }
 
-export function convertOtherTzToLocal(
-  {
-    startHour,
-    endHour,
-    dates,
-    timezone,
-  }: {
-    startHour: number,  // can be a decimal
-    endHour: number,  // can be a decimal
-    dates: string[],  // YYYY-MM-DD
-    timezone: string,  // e.g. "America/Toronto"
-  },
-) {
+export function convertOtherTzToLocal({
+  startHour,
+  endHour,
+  dates,
+  timezone,
+}: {
+  startHour: number; // can be a decimal
+  endHour: number; // can be a decimal
+  dates: string[]; // YYYY-MM-DD
+  timezone: string; // e.g. "America/Toronto"
+}) {
   // copy
   dates = [...dates];
   dates.sort();
@@ -188,7 +186,7 @@ export function convertOtherTzToLocal(
   const hour = Math.floor(startHour);
   const minute = (startHour - hour) * 60;
   assert(Number.isInteger(minute));
-  const dt = DateTime.fromObject({year, month, day, hour, minute}, {zone: timezone});
+  const dt = DateTime.fromObject({ year, month, day, hour, minute }, { zone: timezone });
   assert(dt.isValid);
   const offsetHours = getUTCOffsetHours(getDateFromString(dates[0])) - dt.offset / 60;
   startHour += offsetHours;
@@ -196,11 +194,11 @@ export function convertOtherTzToLocal(
   if (startHour < 0) {
     startHour += 24;
     // Decrement each day by 1
-    dates = dates.map(date => addDaysToDateString(date, -1));
+    dates = dates.map((date) => addDaysToDateString(date, -1));
   } else if (startHour >= 24) {
     startHour -= 24;
     // Increment each day by 1
-    dates = dates.map(date => addDaysToDateString(date, 1));
+    dates = dates.map((date) => addDaysToDateString(date, 1));
   }
   // Each date represents a day when each startTime can start.
   // So we don't need to update the dates if the endTime is adjusted.
@@ -238,7 +236,10 @@ export function roundDownDateTimeStr(dateTime: string): string {
  * @param startDateTime YYYY-MM-DDTHH:mm:ssZ
  * @param endDateTime YYYY-MM-DDTHH:mm:ssZ
  */
- export function startAndEndDateTimeToDateTimesFlat(startDateTime: string, endDateTime: string): string[] {
+export function startAndEndDateTimeToDateTimesFlat(
+  startDateTime: string,
+  endDateTime: string,
+): string[] {
   assert(startDateTime <= endDateTime);
   const date = new Date(startDateTime);
   roundDownDate(date);
@@ -251,7 +252,7 @@ export function roundDownDateTimeStr(dateTime: string): string {
     result.push(dateTime);
   }
   return result;
-};
+}
 
 export function getFractionalHourFromDateInLocalTime(date: Date): number {
   return date.getHours() + date.getMinutes() / 60;
@@ -279,12 +280,28 @@ export function getDayOfWeekAbbr(date: Date) {
 }
 
 export const months = [
-  'January', 'February', 'March', 'April', 'May', 'June', 'July',
-  'August', 'September', 'October', 'November', 'December'
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
 ];
 
 export const daysOfWeek = [
-  'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'
-]
+  "Sunday",
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+];
 
-export const daysOfWeekAbbr = daysOfWeek.map(day => day.substring(0, 3).toUpperCase());
+export const daysOfWeekAbbr = daysOfWeek.map((day) => day.substring(0, 3).toUpperCase());

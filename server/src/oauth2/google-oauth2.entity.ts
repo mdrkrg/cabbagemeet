@@ -1,12 +1,12 @@
-import { Entity, ManyToOne, OneToMany } from 'typeorm';
-import { CustomJoinColumn } from '../custom-columns/custom-join-column';
-import User from '../users/user.entity';
-import AbstractOAuth2 from './abstract-oauth2.entity';
-import GoogleCalendarCreatedEvent from './google-calendar-created-event.entity';
-import GoogleCalendarEvents from './google-calendar-events.entity';
+import { Entity, ManyToOne, OneToMany } from "typeorm";
+import { CustomJoinColumn } from "../custom-columns/custom-join-column";
+import User from "../users/user.entity";
+import AbstractOAuth2 from "./abstract-oauth2.entity";
+import GoogleCalendarCreatedEvent from "./google-calendar-created-event.entity";
+import GoogleCalendarEvents from "./google-calendar-events.entity";
 
 // See https://developers.google.com/identity/openid-connect/openid-connect
-@Entity('GoogleOAuth2')
+@Entity("GoogleOAuth2")
 export default class GoogleOAuth2 extends AbstractOAuth2 {
   // !!!!!!!!!!!!!!
   // Workaround for https://github.com/typeorm/typeorm/issues/3952
@@ -17,8 +17,8 @@ export default class GoogleOAuth2 extends AbstractOAuth2 {
   // !!!!!!!!!!!!!!
 
   //@OneToOne(() => User, user => user.GoogleOAuth2, {onDelete: 'CASCADE'})
-  @ManyToOne(() => User, (user) => user.GoogleOAuth2, { onDelete: 'CASCADE' })
-  @CustomJoinColumn({ name: 'UserID' })
+  @ManyToOne(() => User, (user) => user.GoogleOAuth2, { onDelete: "CASCADE" })
+  @CustomJoinColumn({ name: "UserID" })
   User: User;
 
   @OneToMany(() => GoogleCalendarEvents, (event) => event.GoogleOAuth2)

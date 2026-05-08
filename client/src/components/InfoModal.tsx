@@ -1,19 +1,17 @@
-import React from 'react';
-import Modal from 'react-bootstrap/Modal';
+import React from "react";
+import Modal from "react-bootstrap/Modal";
 
 export default function InfoModal({
-  show, setShow, children
+  show,
+  setShow,
+  children,
 }: React.PropsWithChildren<{
-  show: boolean, setShow: (val: boolean) => void
+  show: boolean;
+  setShow: (val: boolean) => void;
 }>) {
   const onClose = () => setShow(false);
   return (
-    <Modal
-      backdrop="static"
-      show={show}
-      onHide={onClose}
-      centered={true}
-    >
+    <Modal backdrop="static" show={show} onHide={onClose} centered={true}>
       <Modal.Header closeButton className="border-bottom-0"></Modal.Header>
       <Modal.Body>{children}</Modal.Body>
       <Modal.Footer className="border-top-0">

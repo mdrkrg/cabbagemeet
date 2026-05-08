@@ -2,13 +2,13 @@ import type { FetchBaseQueryError } from "@reduxjs/toolkit/dist/query";
 import type { SerializedError } from "@reduxjs/toolkit";
 import React, { useEffect, useRef, useState } from "react";
 import Form from "react-bootstrap/Form";
-import { useAppDispatch, useAppSelector } from 'app/hooks';
+import { useAppDispatch, useAppSelector } from "app/hooks";
 import BottomOverlay from "components/BottomOverlay";
 import MeetingAboutPrompt from "components/MeetingForm/MeetingAboutPrompt";
 import MeetingTimesPrompt from "components/MeetingForm/MeetingTimesPrompt";
 import Calendar from "components/DayPicker/Calendar";
-import 'components/DayPicker/DayPicker.css';
-import 'components/MeetingForm/MeetingForm.css';
+import "components/DayPicker/DayPicker.css";
+import "components/MeetingForm/MeetingForm.css";
 import { resetSelectedDates, selectSelectedDates, setSelectedDates } from "slices/selectedDates";
 import { arrayToObject } from "utils/arrays.utils";
 import { useToast } from "components/Toast";
@@ -22,21 +22,16 @@ import { assert, scrollUpIntoViewIfNeeded } from "utils/misc.utils";
 
 // TODO: reduce code duplication with MeetingForm
 
-export default function EditMeeting({
-  setIsEditing,
-}: {
-  setIsEditing: (val: boolean) => void,
-}) {
-  const {meeting} = useGetCurrentMeetingWithSelector(
-    ({data: meeting}) => ({meeting})
-  );
+export default function EditMeeting({ setIsEditing }: { setIsEditing: (val: boolean) => void }) {
+  const { meeting } = useGetCurrentMeetingWithSelector(({ data: meeting }) => ({ meeting }));
   assert(meeting !== undefined);
   const [meetingName, setMeetingName] = useState(meeting.name);
   const [meetingAbout, setMeetingAbout] = useState(meeting.about);
   const [startTime, setStartTime] = useState(Math.floor(meeting.minStartHour));
   const [endTime, setEndTime] = useState(Math.ceil(meeting.maxEndHour));
   const selectedDates = useAppSelector(selectSelectedDates);
-  const [editMeeting, {isLoading, isSuccess, error}] = useMutationWithPersistentError(useEditMeetingMutation);
+  const [editMeeting, { isLoading, isSuccess, error }] =
+    useMutationWithPersistentError(useEditMeetingMutation);
   const dispatch = useAppDispatch();
   const { showToast } = useToast();
 
@@ -55,8 +50,8 @@ export default function EditMeeting({
   useEffect(() => {
     if (isSuccess) {
       showToast({
-        msg: 'Meeting successfully edited',
-        msgType: 'success',
+        msg: "Meeting successfully edited",
+        msgType: "success",
         autoClose: true,
       });
       setIsEditing(false);
@@ -65,7 +60,7 @@ export default function EditMeeting({
 
   const onSave: React.MouseEventHandler<HTMLButtonElement> = (ev) => {
     ev.preventDefault();
-    if (meetingName === '') {
+    if (meetingName === "") {
       // TODO: use Form validation
       return;
     }
@@ -78,11 +73,9 @@ export default function EditMeeting({
     }
     const selectedDatesFlat = Object.keys(selectedDates).sort();
     const datesChanged =
-      selectedDatesFlat.length !== meeting.tentativeDates.length
-      || selectedDatesFlat.some((s, i) => s !== meeting.tentativeDates[i]);
-    const timesChanged =
-      startTime !== meeting.minStartHour
-      || endTime !== meeting.maxEndHour;
+      selectedDatesFlat.length !== meeting.tentativeDates.length ||
+      selectedDatesFlat.some((s, i) => s !== meeting.tentativeDates[i]);
+    const timesChanged = startTime !== meeting.minStartHour || endTime !== meeting.maxEndHour;
     if (datesChanged || timesChanged) {
       // dates, start/end times and timezone must all be set together
       body.tentativeDates = selectedDatesFlat;
@@ -103,19 +96,21 @@ export default function EditMeeting({
 
   return (
     <Form className="edit-meeting">
-      <MeetingNamePrompt {...{meetingName, setMeetingName, setIsEditing, onSave, isLoading, error}} />
-      <MeetingAboutPrompt {...{meetingAbout, setMeetingAbout}} />
+      <MeetingNamePrompt
+        {...{ meetingName, setMeetingName, setIsEditing, onSave, isLoading, error }}
+      />
+      <MeetingAboutPrompt {...{ meetingAbout, setMeetingAbout }} />
       <div className="create-meeting-form-group">
         <p className="fs-5">On which days would you like to meet?</p>
         <Calendar firstVisibleDate={meeting.tentativeDates[0]} />
       </div>
       <div className="d-md-flex align-items-md-end">
-        <MeetingTimesPrompt {...{startTime, setStartTime, endTime, setEndTime}} />
+        <MeetingTimesPrompt {...{ startTime, setStartTime, endTime, setEndTime }} />
         <div className="ms-auto me-3 d-none d-md-block">
           <ButtonWithSpinner
             className="btn btn-primary"
             onClick={onSave}
-            disabled={meetingName === '' || isLoading}
+            disabled={meetingName === "" || isLoading}
             isLoading={isLoading}
           >
             Save
@@ -124,7 +119,7 @@ export default function EditMeeting({
       </div>
     </Form>
   );
-};
+}
 
 function MeetingNamePrompt({
   meetingName,
@@ -134,12 +129,12 @@ function MeetingNamePrompt({
   isLoading,
   error,
 }: {
-  meetingName: string,
-  setMeetingName: (name: string) => void,
-  setIsEditing: (val: boolean) => void,
-  onSave: React.MouseEventHandler<HTMLButtonElement>,
-  isLoading: boolean,
-  error: FetchBaseQueryError | SerializedError | undefined,
+  meetingName: string;
+  setMeetingName: (name: string) => void;
+  setIsEditing: (val: boolean) => void;
+  onSave: React.MouseEventHandler<HTMLButtonElement>;
+  isLoading: boolean;
+  error: FetchBaseQueryError | SerializedError | undefined;
 }) {
   const onMeetingNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setMeetingName(e.target.value);
@@ -193,7 +188,7 @@ function MeetingNamePrompt({
           tabIndex={-1}
           type="submit"
           onClick={onSave}
-          disabled={meetingName === '' || isLoading}
+          disabled={meetingName === "" || isLoading}
           isLoading={isLoading}
         >
           Save
@@ -213,7 +208,7 @@ function MeetingNamePrompt({
             tabIndex={-1}
             type="submit"
             onClick={onSave}
-            disabled={meetingName === '' || isLoading}
+            disabled={meetingName === "" || isLoading}
             isLoading={isLoading}
           >
             Save
@@ -221,10 +216,7 @@ function MeetingNamePrompt({
         </BottomOverlay>
       </Form.Group>
       {error && (
-        <p
-          className="text-danger text-center mb-0 mt-3"
-          ref={errorMessageElemRef}
-        >
+        <p className="text-danger text-center mb-0 mt-3" ref={errorMessageElemRef}>
           Could not edit meeting: {getReqErrorMessage(error)}
         </p>
       )}

@@ -2,8 +2,8 @@ packages:
   - client
   - server
 allowBuilds:
-  '@nestjs/core': false
-  '@parcel/watcher': false
+  "@nestjs/core": false
+  "@parcel/watcher": false
   bcrypt: false
   better-sqlite3: false
   esbuild: false
@@ -13,12 +13,12 @@ catalog:
   vitest: npm:@voidzero-dev/vite-plus-test@latest
   vite-plus: latest
 overrides:
-  vite: 'catalog:'
-  vitest: 'catalog:'
+  vite: "catalog:"
+  vitest: "catalog:"
 peerDependencyRules:
   allowAny:
     - vite
     - vitest
   allowedVersions:
-    vite: '*'
-    vitest: '*'
+    vite: "*"
+    vitest: "*"

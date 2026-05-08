@@ -14,7 +14,7 @@ export function range(start: number, stop?: number): number[] {
     stop = start;
     start = 0;
   }
-  return [...Array(stop - start).keys()].map(i => start + i);
+  return [...Array(stop - start).keys()].map((i) => start + i);
 }
 
 export function arrayToObject(arr: string[]): { [key: string]: true } {

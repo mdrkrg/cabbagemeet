@@ -1,59 +1,59 @@
-import ConfigService from '../config/config.service';
-import { Repository } from 'typeorm';
-import type { Dispatcher } from 'undici';
+import ConfigService from "../config/config.service";
+import { Repository } from "typeorm";
+import type { Dispatcher } from "undici";
 import {
   toISOStringUTCFromDateStrAndHourAndTz,
   toISOStringUTC,
   toISOStringUTCFromDateTimeStr,
-} from '../dates.utils';
-import type Meeting from '../meetings/meeting.entity';
-import { createPublicMeetingURL } from '../meetings/meetings.utils';
-import { encodeQueryParams } from '../misc.utils';
-import User from '../users/user.entity';
-import AbstractOAuth2CalendarCreatedEvent from './abstract-oauth2-calendar-created-event.entity';
-import GoogleOAuth2 from './google-oauth2.entity';
+} from "../dates.utils";
+import type Meeting from "../meetings/meeting.entity";
+import { createPublicMeetingURL } from "../meetings/meetings.utils";
+import { encodeQueryParams } from "../misc.utils";
+import User from "../users/user.entity";
+import AbstractOAuth2CalendarCreatedEvent from "./abstract-oauth2-calendar-created-event.entity";
+import GoogleOAuth2 from "./google-oauth2.entity";
 import type {
   IOAuth2Provider,
   OAuth2Config,
   PartialAuthzQueryParams,
   PartialRefreshParams,
   PartialTokenFormParams,
-} from './oauth2.service';
+} from "./oauth2.service";
 import type {
   GoogleListEventsResponse,
   GoogleListEventsResponseItem,
   GoogleInsertEventResponse,
-} from './oauth2-response-types';
+} from "./oauth2-response-types";
 import {
   OAuth2CalendarEvent,
   OAuth2ErrorResponseError,
   OAuth2ProviderType,
   oidcScopes,
-} from './oauth2-common';
-import type OAuth2Service from './oauth2.service';
-import GoogleCalendarEvents from './google-calendar-events.entity';
-import { Logger } from '@nestjs/common';
-import AbstractOAuth2 from './abstract-oauth2.entity';
+} from "./oauth2-common";
+import type OAuth2Service from "./oauth2.service";
+import GoogleCalendarEvents from "./google-calendar-events.entity";
+import { Logger } from "@nestjs/common";
+import AbstractOAuth2 from "./abstract-oauth2.entity";
 
 const googleOidcScopes = [
-  'openid',
+  "openid",
   // Note that these are different from the standard OIDC scope names
-  'https://www.googleapis.com/auth/userinfo.profile',
-  'https://www.googleapis.com/auth/userinfo.email',
+  "https://www.googleapis.com/auth/userinfo.profile",
+  "https://www.googleapis.com/auth/userinfo.email",
 ];
 const googleCalendarScopes = [
   // See https://developers.google.com/identity/protocols/oauth2/scopes#calendar
-  'https://www.googleapis.com/auth/calendar.events.owned',
+  "https://www.googleapis.com/auth/calendar.events.owned",
 ];
 const oauth2Config: OAuth2Config = {
   // See https://developers.google.com/identity/protocols/oauth2/web-server
   //     https://accounts.google.com/.well-known/openid-configuration
-  authzEndpoint: 'https://accounts.google.com/o/oauth2/v2/auth',
-  tokenEndpoint: 'https://oauth2.googleapis.com/token',
-  revokeEndpoint: 'https://oauth2.googleapis.com/revoke',
+  authzEndpoint: "https://accounts.google.com/o/oauth2/v2/auth",
+  tokenEndpoint: "https://oauth2.googleapis.com/token",
+  revokeEndpoint: "https://oauth2.googleapis.com/revoke",
   scopes: [...oidcScopes, ...googleCalendarScopes],
 };
-const GOOGLE_API_BASE_URL = 'https://www.googleapis.com';
+const GOOGLE_API_BASE_URL = "https://www.googleapis.com";
 const GOOGLE_API_CALENDAR_EVENTS_BASE_URL = `${GOOGLE_API_BASE_URL}/calendar/v3/calendars/primary/events`;
 
 type GoogleOAuth2EnvConfig = {
@@ -113,10 +113,10 @@ export default class GoogleOAuth2Provider implements IOAuth2Provider {
     private readonly oauth2Service: OAuth2Service,
     private readonly calendarEventsRepository: Repository<GoogleCalendarEvents>,
   ) {
-    const client_id = configService.get('OAUTH2_GOOGLE_CLIENT_ID');
-    const redirect_uri = configService.get('OAUTH2_GOOGLE_REDIRECT_URI');
-    const secret = configService.get('OAUTH2_GOOGLE_CLIENT_SECRET');
-    this.publicURL = configService.get('PUBLIC_URL');
+    const client_id = configService.get("OAUTH2_GOOGLE_CLIENT_ID");
+    const redirect_uri = configService.get("OAUTH2_GOOGLE_REDIRECT_URI");
+    const secret = configService.get("OAUTH2_GOOGLE_CLIENT_SECRET");
+    this.publicURL = configService.get("PUBLIC_URL");
     if (client_id && redirect_uri && secret) {
       this.envConfig = { client_id, redirect_uri, secret };
     }
@@ -138,7 +138,7 @@ export default class GoogleOAuth2Provider implements IOAuth2Provider {
     return {
       client_id: this.envConfig!.client_id,
       redirect_uri: this.envConfig!.redirect_uri,
-      access_type: 'offline',
+      access_type: "offline",
     };
   }
 
@@ -167,12 +167,11 @@ export default class GoogleOAuth2Provider implements IOAuth2Provider {
   ) {
     for (const item of newItems) {
       // See https://developers.google.com/calendar/api/v3/reference/events#resource
-      if (item.status === 'cancelled') {
+      if (item.status === "cancelled") {
         delete eventsMap[item.id];
       } else {
         // update or insert
-        eventsMap[item.id] =
-          GoogleListEventsResponseItem_to_OAuth2CalendarEvent(item);
+        eventsMap[item.id] = GoogleListEventsResponseItem_to_OAuth2CalendarEvent(item);
       }
     }
   }
@@ -210,16 +209,10 @@ export default class GoogleOAuth2Provider implements IOAuth2Provider {
     let atLeastOneEventChanged = false;
     let nextSyncToken: string | undefined;
     for (;;) {
-      const url =
-        GOOGLE_API_CALENDAR_EVENTS_BASE_URL + '?' + encodeQueryParams(params);
+      const url = GOOGLE_API_CALENDAR_EVENTS_BASE_URL + "?" + encodeQueryParams(params);
       let response: GoogleListEventsResponse | undefined;
       try {
-        response =
-          await this.oauth2Service.apiRequest<GoogleListEventsResponse>(
-            this,
-            creds,
-            url,
-          );
+        response = await this.oauth2Service.apiRequest<GoogleListEventsResponse>(this, creds, url);
         this.logger.debug(response);
       } catch (err: any) {
         // See https://developers.google.com/calendar/api/guides/sync#full_sync_required_by_server
@@ -229,13 +222,8 @@ export default class GoogleOAuth2Provider implements IOAuth2Provider {
         }
         throw err;
       }
-      atLeastOneEventChanged =
-        atLeastOneEventChanged || response.items.length > 0;
-      response.items = filterOutEventsWhichAreOutOfRange(
-        response.items,
-        timeMin,
-        timeMax,
-      );
+      atLeastOneEventChanged = atLeastOneEventChanged || response.items.length > 0;
+      response.items = filterOutEventsWhichAreOutOfRange(response.items, timeMin, timeMax);
       this.mergeResultsFromIncrementalSync(eventsMap, response.items);
       if (response.nextSyncToken) {
         nextSyncToken = response.nextSyncToken;
@@ -260,33 +248,23 @@ export default class GoogleOAuth2Provider implements IOAuth2Provider {
   } | null> {
     // Make sure to NOT use orderBy, otherwise a syncToken won't be returned
     const params: Record<string, string> = {
-      maxAttendees: '1',
-      singleEvents: 'true',
+      maxAttendees: "1",
+      singleEvents: "true",
       timeMin,
       timeMax,
     };
     const events: OAuth2CalendarEvent[] = [];
     let nextSyncToken: string | undefined;
     for (;;) {
-      const url =
-        GOOGLE_API_CALENDAR_EVENTS_BASE_URL + '?' + encodeQueryParams(params);
-      const response =
-        await this.oauth2Service.apiRequest<GoogleListEventsResponse>(
-          this,
-          creds,
-          url,
-        );
+      const url = GOOGLE_API_CALENDAR_EVENTS_BASE_URL + "?" + encodeQueryParams(params);
+      const response = await this.oauth2Service.apiRequest<GoogleListEventsResponse>(
+        this,
+        creds,
+        url,
+      );
       this.logger.debug(response);
-      response.items = filterOutEventsWhichAreOutOfRange(
-        response.items,
-        timeMin,
-        timeMax,
-      );
-      events.push(
-        ...response.items.map(
-          GoogleListEventsResponseItem_to_OAuth2CalendarEvent,
-        ),
-      );
+      response.items = filterOutEventsWhichAreOutOfRange(response.items, timeMin, timeMax);
+      events.push(...response.items.map(GoogleListEventsResponseItem_to_OAuth2CalendarEvent));
       if (response.nextSyncToken) {
         nextSyncToken = response.nextSyncToken;
         break;
@@ -315,14 +293,13 @@ export default class GoogleOAuth2Provider implements IOAuth2Provider {
       meeting.MaxEndHour,
       meeting.Timezone,
     );
-    const existingEventsData =
-      await this.getEventsForMeetingUsingIncrementalSync(
-        creds,
-        userID,
-        meeting.ID,
-        apiTimeMin,
-        apiTimeMax,
-      );
+    const existingEventsData = await this.getEventsForMeetingUsingIncrementalSync(
+      creds,
+      userID,
+      meeting.ID,
+      apiTimeMin,
+      apiTimeMax,
+    );
     let events: OAuth2CalendarEvent[];
     let nextSyncToken: string | null = null;
     let needToSaveEvents = true;
@@ -346,12 +323,9 @@ export default class GoogleOAuth2Provider implements IOAuth2Provider {
         SyncToken: nextSyncToken,
       });
     }
-    const createdEvent =
-      creds.CreatedEvents.length > 0 ? creds.CreatedEvents[0] : null;
+    const createdEvent = creds.CreatedEvents.length > 0 ? creds.CreatedEvents[0] : null;
     if (createdEvent) {
-      events = events.filter(
-        (event) => event.ID !== createdEvent.CreatedEventID,
-      );
+      events = events.filter((event) => event.ID !== createdEvent.CreatedEventID);
     }
     return events;
   }
@@ -362,11 +336,11 @@ export default class GoogleOAuth2Provider implements IOAuth2Provider {
     meeting: Meeting,
   ): Promise<string> {
     let apiURL = GOOGLE_API_CALENDAR_EVENTS_BASE_URL;
-    let apiMethod: Dispatcher.HttpMethod = 'POST';
+    let apiMethod: Dispatcher.HttpMethod = "POST";
     if (existingEvent) {
       // See https://developers.google.com/calendar/api/v3/reference/events/update
-      apiURL += '/' + existingEvent.CreatedEventID;
-      apiMethod = 'PUT';
+      apiURL += "/" + existingEvent.CreatedEventID;
+      apiMethod = "PUT";
     }
     const params: Record<string, any> = {
       start: {
@@ -385,7 +359,7 @@ export default class GoogleOAuth2Provider implements IOAuth2Provider {
     }
     let response: GoogleInsertEventResponse | undefined;
     const body = JSON.stringify(params);
-    const headers = { 'content-type': 'application/json' };
+    const headers = { "content-type": "application/json" };
     try {
       response = await this.oauth2Service.apiRequest<GoogleInsertEventResponse>(
         this,
@@ -397,13 +371,12 @@ export default class GoogleOAuth2Provider implements IOAuth2Provider {
       if (existingEvent && errorIsGoogleCalendarEventNoLongerExists(err)) {
         // It's possible that the user deleted the event themselves. Try to create
         // a new one instead.
-        response =
-          await this.oauth2Service.apiRequest<GoogleInsertEventResponse>(
-            this,
-            creds,
-            GOOGLE_API_CALENDAR_EVENTS_BASE_URL,
-            { method: 'POST', body, headers },
-          );
+        response = await this.oauth2Service.apiRequest<GoogleInsertEventResponse>(
+          this,
+          creds,
+          GOOGLE_API_CALENDAR_EVENTS_BASE_URL,
+          { method: "POST", body, headers },
+        );
       } else {
         throw err;
       }
@@ -415,7 +388,7 @@ export default class GoogleOAuth2Provider implements IOAuth2Provider {
     const apiURL = `${GOOGLE_API_CALENDAR_EVENTS_BASE_URL}/${eventID}`;
     try {
       await this.oauth2Service.apiRequest(this, creds, apiURL, {
-        method: 'DELETE',
+        method: "DELETE",
       });
     } catch (err) {
       if (!errorIsGoogleCalendarEventNoLongerExists(err)) {

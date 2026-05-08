@@ -1,16 +1,12 @@
-import {
-  BadRequestException,
-  INestApplication,
-  ValidationPipe,
-} from '@nestjs/common';
-import ConfigModule from './config/config.module';
-import ConfigService from './config/config.service';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import databaseOptionsFactory from './database-options-factory';
-import CustomMigrationsModule from './custom-migrations/custom-migrations.module';
-import EnoentFilter from './enoent.filter';
-import { oauth2ProviderNames } from './oauth2/oauth2-common';
-import { HttpAdapterHost } from '@nestjs/core';
+import { BadRequestException, INestApplication, ValidationPipe } from "@nestjs/common";
+import ConfigModule from "./config/config.module";
+import ConfigService from "./config/config.service";
+import { TypeOrmModule } from "@nestjs/typeorm";
+import databaseOptionsFactory from "./database-options-factory";
+import CustomMigrationsModule from "./custom-migrations/custom-migrations.module";
+import EnoentFilter from "./enoent.filter";
+import { oauth2ProviderNames } from "./oauth2/oauth2-common";
+import { HttpAdapterHost } from "@nestjs/core";
 
 // Also used by the database migrations
 export function getCommonImports() {
@@ -27,10 +23,8 @@ export function getCommonImports() {
 
 // Also used by the E2E tests
 export function commonAppBootstrap(app: INestApplication) {
-  app.setGlobalPrefix('api', {
-    exclude: oauth2ProviderNames.map(
-      (name) => `redirect/${name.toLowerCase()}`,
-    ),
+  app.setGlobalPrefix("api", {
+    exclude: oauth2ProviderNames.map((name) => `redirect/${name.toLowerCase()}`),
   });
   app.useGlobalPipes(
     new ValidationPipe({

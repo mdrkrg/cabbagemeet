@@ -1,12 +1,12 @@
-import { useContext, useEffect } from 'react';
-import ButtonWithSpinner from 'components/ButtonWithSpinner';
-import { HistoryContext } from 'components/HistoryProvider';
+import { useContext, useEffect } from "react";
+import ButtonWithSpinner from "components/ButtonWithSpinner";
+import { HistoryContext } from "components/HistoryProvider";
 import { useLoginWithGoogleMutation, useSignupWithGoogleMutation } from "slices/api";
-import { createAndStoreSessionNonce } from 'utils/auth.utils';
-import { capitalize } from 'utils/misc.utils';
-import { logos, OAuth2Provider } from 'utils/oauth2-common';
-import { getReqErrorMessage, useMutationWithPersistentError } from 'utils/requests.utils';
-import styles from './ContinueWithButton.module.css';
+import { createAndStoreSessionNonce } from "utils/auth.utils";
+import { capitalize } from "utils/misc.utils";
+import { logos, OAuth2Provider } from "utils/oauth2-common";
+import { getReqErrorMessage, useMutationWithPersistentError } from "utils/requests.utils";
+import styles from "./ContinueWithButton.module.css";
 
 export default function ContinueWithButton({
   reason,
@@ -15,25 +15,15 @@ export default function ContinueWithButton({
   useSignupMutation,
   className,
 }: {
-  reason: 'signup' | 'login',
-  provider: OAuth2Provider,
-  useLoginMutation: typeof useLoginWithGoogleMutation,
-  useSignupMutation: typeof useSignupWithGoogleMutation,
+  reason: "signup" | "login";
+  provider: OAuth2Provider;
+  useLoginMutation: typeof useLoginWithGoogleMutation;
+  useSignupMutation: typeof useSignupWithGoogleMutation;
   className?: string;
 }) {
-  const [
-    loginOrSignup,
-    {
-      data,
-      isSuccess,
-      isLoading,
-      error,
-      reset,
-    }
-  ] = useMutationWithPersistentError(
-    reason === 'signup' ? useSignupMutation : useLoginMutation
-  );
-  const {lastNonAuthPath} = useContext(HistoryContext);
+  const [loginOrSignup, { data, isSuccess, isLoading, error, reset }] =
+    useMutationWithPersistentError(reason === "signup" ? useSignupMutation : useLoginMutation);
+  const { lastNonAuthPath } = useContext(HistoryContext);
   let onClick: React.MouseEventHandler<HTMLButtonElement> | undefined;
   onClick = async () => {
     loginOrSignup({
@@ -55,33 +45,29 @@ export default function ContinueWithButton({
     const listener = () => {
       reset();
     };
-    window.addEventListener('pageshow', listener);
+    window.addEventListener("pageshow", listener);
     return () => {
-      window.removeEventListener('pageshow', listener);
+      window.removeEventListener("pageshow", listener);
     };
   }, [reset]);
   const capitalizedProvider = capitalize(provider);
   const logoPath = logos[provider];
-  className = `btn ${styles.ContinueWithButton} border w-100` + (className ? ` ${className}` : '');
+  className = `btn ${styles.ContinueWithButton} border w-100` + (className ? ` ${className}` : "");
   return (
     <>
-      <ButtonWithSpinner
-        className={className}
-        onClick={onClick}
-        isLoading={isLoading || isSuccess}
-      >
+      <ButtonWithSpinner className={className} onClick={onClick} isLoading={isLoading || isSuccess}>
         <img
           src={logoPath}
           alt={`${capitalizedProvider} Logo`}
           className="me-3"
-          style={{maxHeight: '1.2em', verticalAlign: 'middle'}}
+          style={{ maxHeight: "1.2em", verticalAlign: "middle" }}
         />
-        <span style={{verticalAlign: 'middle'}}>
-          Continue with {capitalizedProvider}
-        </span>
+        <span style={{ verticalAlign: "middle" }}>Continue with {capitalizedProvider}</span>
       </ButtonWithSpinner>
       {error && (
-        <p className="text-danger text-center mb-0 mt-3">An error occurred: {getReqErrorMessage(error)}</p>
+        <p className="text-danger text-center mb-0 mt-3">
+          An error occurred: {getReqErrorMessage(error)}
+        </p>
       )}
     </>
   );

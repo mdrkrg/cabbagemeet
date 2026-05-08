@@ -1,14 +1,14 @@
-import { useEffect } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { useAppDispatch, useAppSelector } from 'app/hooks';
-import BottomOverlay from 'components/BottomOverlay';
-import MeetingForm from 'components/MeetingForm';
-import { selectSelectedDates, setSelectedDates } from 'slices/selectedDates';
-import './DayPicker.css';
-import Calendar from './Calendar';
-import { useTodayString } from 'utils/dates.utils';
-import { useState } from 'react';
-import useSetTitle from 'utils/title.hook';
+import { useEffect } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useAppDispatch, useAppSelector } from "app/hooks";
+import BottomOverlay from "components/BottomOverlay";
+import MeetingForm from "components/MeetingForm";
+import { selectSelectedDates, setSelectedDates } from "slices/selectedDates";
+import "./DayPicker.css";
+import Calendar from "./Calendar";
+import { useTodayString } from "utils/dates.utils";
+import { useState } from "react";
+import useSetTitle from "utils/title.hook";
 
 export default function DayPicker() {
   const dispatch = useAppDispatch();
@@ -17,30 +17,30 @@ export default function DayPicker() {
   const [clickedMeetButton, setClickedMeetButton] = useState(false);
   const todayString = useTodayString();
   const atLeastOneDateSelected = useAppSelector(
-    state => Object.keys(selectSelectedDates(state)).length > 0
+    (state) => Object.keys(selectSelectedDates(state)).length > 0,
   );
 
   useSetTitle();
 
   useEffect(() => {
     // Select today's date by default
-    dispatch(setSelectedDates({[todayString]: true}));
+    dispatch(setSelectedDates({ [todayString]: true }));
   }, [dispatch, todayString]);
 
   useEffect(() => {
-    if (pathname === '/create' && !clickedMeetButton) {
+    if (pathname === "/create" && !clickedMeetButton) {
       // user navigated directly to /create without visiting the homepage first
-      navigate('/');
+      navigate("/");
     }
   }, [pathname, clickedMeetButton, navigate]);
 
-  if (clickedMeetButton && pathname === '/create') {
+  if (clickedMeetButton && pathname === "/create") {
     return <MeetingForm />;
   }
 
   const onClick = () => {
     setClickedMeetButton(true);
-    navigate('/create');
+    navigate("/create");
   };
   return (
     <>
@@ -54,19 +54,17 @@ export default function DayPicker() {
           Let's meet
         </button>
       </section>
-      <section style={{marginTop: '4rem'}}>
+      <section style={{ marginTop: "4rem" }}>
         <Calendar firstVisibleDate={todayString} />
       </section>
       <BottomOverlay>
-        <Link to="/how-it-works" className="custom-link custom-link-inverted">How it works</Link>
-        <button
-          className="btn btn-light px-4"
-          onClick={onClick}
-          disabled={!atLeastOneDateSelected}
-        >
+        <Link to="/how-it-works" className="custom-link custom-link-inverted">
+          How it works
+        </Link>
+        <button className="btn btn-light px-4" onClick={onClick} disabled={!atLeastOneDateSelected}>
           Let's meet
         </button>
       </BottomOverlay>
     </>
   );
-};
+}

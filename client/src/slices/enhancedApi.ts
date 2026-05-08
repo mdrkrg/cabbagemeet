@@ -1,12 +1,18 @@
-import type { AnyAction, ThunkDispatch } from '@reduxjs/toolkit';
-import type { MutationLifecycleApi, QueryLifecycleApi } from '@reduxjs/toolkit/dist/query/endpointDefinitions';
-import { removeToken, setToken } from './authentication';
-import { transformMeetingResponse, transformMeetingsShortResponse } from 'utils/response-transforms';
+import type { AnyAction, ThunkDispatch } from "@reduxjs/toolkit";
+import type {
+  MutationLifecycleApi,
+  QueryLifecycleApi,
+} from "@reduxjs/toolkit/dist/query/endpointDefinitions";
+import { removeToken, setToken } from "./authentication";
+import {
+  transformMeetingResponse,
+  transformMeetingsShortResponse,
+} from "utils/response-transforms";
 import type {
   TransformedMeetingResponse,
   TransformedMeetingsShortResponse,
-} from 'utils/response-transforms';
-import { api, SignupApiResponse, UserResponse, VerifyEmailAddressResponse } from './api';
+} from "utils/response-transforms";
+import { api, SignupApiResponse, UserResponse, VerifyEmailAddressResponse } from "./api";
 import type {
   MeetingResponse,
   GetMeetingApiArg,
@@ -17,8 +23,8 @@ import type {
   GetSelfInfoApiResponse,
   ConfirmPasswordResetApiResponse,
   ConfirmPasswordResetApiArg,
-} from './api';
-import { setCurrentMeetingID } from './currentMeeting';
+} from "./api";
+import { setCurrentMeetingID } from "./currentMeeting";
 
 const replacedApi = api.injectEndpoints({
   endpoints: (build) => ({
@@ -30,19 +36,21 @@ const replacedApi = api.injectEndpoints({
       query: () => ({ url: `/api/me/created-meetings` }),
       transformResponse: transformMeetingsShortResponse,
     }),
-    getRespondedMeetings: build.query<TransformedMeetingsShortResponse, GetRespondedMeetingsApiArg>({
-      query: () => ({ url: `/api/me/responded-meetings` }),
-      transformResponse: transformMeetingsShortResponse,
-    }),
+    getRespondedMeetings: build.query<TransformedMeetingsShortResponse, GetRespondedMeetingsApiArg>(
+      {
+        query: () => ({ url: `/api/me/responded-meetings` }),
+        transformResponse: transformMeetingsShortResponse,
+      },
+    ),
     confirmPasswordReset: build.mutation<
       ConfirmPasswordResetApiResponse,
-      ConfirmPasswordResetApiArg & {token: string}
+      ConfirmPasswordResetApiArg & { token: string }
     >({
       query: (queryArg) => ({
         url: `/api/confirm-password-reset`,
         method: "POST",
-        body: {password: queryArg.password},
-        headers: {authorization: `Bearer ${queryArg.token}`},
+        body: { password: queryArg.password },
+        headers: { authorization: `Bearer ${queryArg.token}` },
       }),
     }),
   }),
@@ -56,11 +64,11 @@ export const {
 } = replacedApi;
 
 const allTags = [
-  'createdMeetings',
-  'respondedMeetings',
-  'meeting',
-  'googleCalendarEvents',
-  'microsoftCalendarEvents',
+  "createdMeetings",
+  "respondedMeetings",
+  "meeting",
+  "googleCalendarEvents",
+  "microsoftCalendarEvents",
 ] as const;
 
 export const enhancedApi = replacedApi.enhanceEndpoints({
@@ -93,7 +101,7 @@ export const enhancedApi = replacedApi.enhanceEndpoints({
       onQueryStarted: (arg, api) => editUser_onQueryStarted(arg, api),
       // If a user changed their name, the respondents data for a meeting
       // could now be invalid
-      invalidatesTags: ['meeting'],
+      invalidatesTags: ["meeting"],
     },
     confirmLinkGoogleAccount: {
       onQueryStarted: (arg, api) => editUser_onQueryStarted(arg, api),
@@ -108,7 +116,7 @@ export const enhancedApi = replacedApi.enhanceEndpoints({
       onQueryStarted: (arg, api) => editUser_onQueryStarted(arg, api),
     },
     getMeeting: {
-      providesTags: (result, error, arg) => [{type: 'meeting', id: arg}],
+      providesTags: (result, error, arg) => [{ type: "meeting", id: arg }],
     },
     addGuestRespondent: {
       onQueryStarted: (arg, api) => upsertMeeting_onQueryStarted(arg, api),
@@ -123,78 +131,76 @@ export const enhancedApi = replacedApi.enhanceEndpoints({
       onQueryStarted: (arg, api) => upsertMeeting_onQueryStarted(arg, api),
     },
     createMeeting: {
-      invalidatesTags: ['createdMeetings', 'respondedMeetings'],
+      invalidatesTags: ["createdMeetings", "respondedMeetings"],
       onQueryStarted: (arg, api) => upsertMeeting_onQueryStarted(arg, api),
     },
     editMeeting: {
-      invalidatesTags: (result, error, arg) =>
-        [
-          'createdMeetings', 'respondedMeetings',
-          {type: 'googleCalendarEvents', id: arg.id},
-          {type: 'microsoftCalendarEvents', id: arg.id},
-        ],
+      invalidatesTags: (result, error, arg) => [
+        "createdMeetings",
+        "respondedMeetings",
+        { type: "googleCalendarEvents", id: arg.id },
+        { type: "microsoftCalendarEvents", id: arg.id },
+      ],
       onQueryStarted: (arg, api) => upsertMeeting_onQueryStarted(arg, api),
     },
     deleteMeeting: {
-      invalidatesTags: ['createdMeetings', 'respondedMeetings'],
+      invalidatesTags: ["createdMeetings", "respondedMeetings"],
       onQueryStarted: (arg, api) => deleteMeeting_onQueryStarted(arg, api),
     },
     scheduleMeeting: {
-      invalidatesTags: ['createdMeetings', 'respondedMeetings'],
+      invalidatesTags: ["createdMeetings", "respondedMeetings"],
       onQueryStarted: (arg, api) => upsertMeeting_onQueryStarted(arg, api),
     },
     unscheduleMeeting: {
-      invalidatesTags: ['createdMeetings', 'respondedMeetings'],
+      invalidatesTags: ["createdMeetings", "respondedMeetings"],
       onQueryStarted: (arg, api) => upsertMeeting_onQueryStarted(arg, api),
     },
     getCreatedMeetings: {
-      providesTags: ['createdMeetings'],
+      providesTags: ["createdMeetings"],
     },
     getRespondedMeetings: {
-      providesTags: ['respondedMeetings'],
+      providesTags: ["respondedMeetings"],
     },
     getGoogleCalendarEvents: {
-      providesTags: (result, error, arg) => [{type: 'googleCalendarEvents', id: arg}],
+      providesTags: (result, error, arg) => [{ type: "googleCalendarEvents", id: arg }],
     },
     getMicrosoftCalendarEvents: {
-      providesTags: (result, error, arg) => [{type: 'microsoftCalendarEvents', id: arg}],
+      providesTags: (result, error, arg) => [{ type: "microsoftCalendarEvents", id: arg }],
     },
   },
 });
 
 export function isVerifyEmailAddressResponse(resp: object): resp is VerifyEmailAddressResponse {
-  return resp.hasOwnProperty('mustVerifyEmailAddress');
+  return resp.hasOwnProperty("mustVerifyEmailAddress");
 }
 
 function updateStoreForUserResponseWithToken(
   dispatch: ThunkDispatch<any, any, AnyAction>,
   selfInfoWithToken: UserResponseWithToken,
 ) {
-  const {token, ...selfInfo} = selfInfoWithToken;
-  dispatch(enhancedApi.util.upsertQueryData(
-    'getSelfInfo', undefined, selfInfo
-  ));
+  const { token, ...selfInfo } = selfInfoWithToken;
+  dispatch(enhancedApi.util.upsertQueryData("getSelfInfo", undefined, selfInfo));
   dispatch(setToken(token));
 }
 
 async function loginOrVerifyEmail_onQueryStarted(
   arg: unknown,
-  {dispatch, queryFulfilled}: MutationLifecycleApi<unknown, any, UserResponseWithToken, 'api'>,
+  { dispatch, queryFulfilled }: MutationLifecycleApi<unknown, any, UserResponseWithToken, "api">,
 ) {
   // pessimistic update
   // https://redux-toolkit.js.org/rtk-query/usage/manual-cache-updates#pessimistic-updates
   try {
-    const {data} = await queryFulfilled;
+    const { data } = await queryFulfilled;
     updateStoreForUserResponseWithToken(dispatch, data);
   } catch (err) {}
 }
 
 async function signup_onQueryStarted(
   arg: unknown,
-  {dispatch, queryFulfilled}: MutationLifecycleApi<unknown, any, SignupApiResponse, 'api'>,
+  { dispatch, queryFulfilled }: MutationLifecycleApi<unknown, any, SignupApiResponse, "api">,
 ) {
   try {
-    const {data} = await queryFulfilled;
+    const { data } = await queryFulfilled;
     if (isVerifyEmailAddressResponse(data)) {
       return;
     }
@@ -204,7 +210,7 @@ async function signup_onQueryStarted(
 
 async function logoutOrDeleteAccount_onQueryStarted(
   arg: unknown,
-  {dispatch, queryFulfilled}: MutationLifecycleApi<unknown, any, unknown, 'api'>,
+  { dispatch, queryFulfilled }: MutationLifecycleApi<unknown, any, unknown, "api">,
 ) {
   try {
     await queryFulfilled;
@@ -214,7 +220,7 @@ async function logoutOrDeleteAccount_onQueryStarted(
 
 async function getSelfInfo_onQueryStarted(
   arg: unknown,
-  {dispatch, queryFulfilled}: QueryLifecycleApi<unknown, any, GetSelfInfoApiResponse, 'api'>,
+  { dispatch, queryFulfilled }: QueryLifecycleApi<unknown, any, GetSelfInfoApiResponse, "api">,
 ) {
   try {
     await queryFulfilled;
@@ -228,31 +234,33 @@ async function getSelfInfo_onQueryStarted(
 
 async function editUser_onQueryStarted(
   arg: unknown,
-  {dispatch, queryFulfilled}: MutationLifecycleApi<unknown, any, UserResponse, 'api'>,
+  { dispatch, queryFulfilled }: MutationLifecycleApi<unknown, any, UserResponse, "api">,
 ) {
   try {
-    const {data: selfInfo} = await queryFulfilled;
-    dispatch(enhancedApi.util.upsertQueryData(
-      'getSelfInfo', undefined, selfInfo
-    ));
+    const { data: selfInfo } = await queryFulfilled;
+    dispatch(enhancedApi.util.upsertQueryData("getSelfInfo", undefined, selfInfo));
   } catch {}
 }
 
 async function upsertMeeting_onQueryStarted(
   arg: unknown,
-  {dispatch, queryFulfilled}: MutationLifecycleApi<unknown, any, MeetingResponse, 'api'>,
+  { dispatch, queryFulfilled }: MutationLifecycleApi<unknown, any, MeetingResponse, "api">,
 ) {
   try {
-    const {data: meeting} = await queryFulfilled;
-    dispatch(enhancedApi.util.upsertQueryData(
-      'getMeeting', meeting.meetingID, transformMeetingResponse(meeting)
-    ));
+    const { data: meeting } = await queryFulfilled;
+    dispatch(
+      enhancedApi.util.upsertQueryData(
+        "getMeeting",
+        meeting.meetingID,
+        transformMeetingResponse(meeting),
+      ),
+    );
   } catch {}
 }
 
 async function deleteMeeting_onQueryStarted(
   arg: string,
-  {dispatch, queryFulfilled}: MutationLifecycleApi<unknown, any, DeleteMeetingApiResponse, 'api'>,
+  { dispatch, queryFulfilled }: MutationLifecycleApi<unknown, any, DeleteMeetingApiResponse, "api">,
 ) {
   try {
     await queryFulfilled;

@@ -1,7 +1,7 @@
-import type { DateTimeSet } from 'common/types';
+import type { DateTimeSet } from "common/types";
 import { convertOtherTzToLocal } from "utils/dates.utils";
 import { MeetingRespondent, MeetingsShortResponse } from "slices/api";
-import type { MeetingShortResponse, MeetingResponse } from 'slices/api';
+import type { MeetingShortResponse, MeetingResponse } from "slices/api";
 import { arrayToObject } from "./arrays.utils";
 
 export type TransformedRespondent = {
@@ -11,23 +11,24 @@ export type TransformedRespondent = {
 export type TransformedRespondents = {
   [userID: number]: TransformedRespondent;
 };
-export type TransformedMeetingResponse = Omit<
-  MeetingResponse,
-  'respondents' | 'timezone'
-> & {
+export type TransformedMeetingResponse = Omit<MeetingResponse, "respondents" | "timezone"> & {
   respondents: TransformedRespondents;
 };
-export type TransformedMeetingShortResponse = Omit<MeetingShortResponse, 'timezone'>;
-export type TransformedMeetingsShortResponse = { meetings: TransformedMeetingShortResponse[]; };
+export type TransformedMeetingShortResponse = Omit<MeetingShortResponse, "timezone">;
+export type TransformedMeetingsShortResponse = { meetings: TransformedMeetingShortResponse[] };
 
-export function transformMeetingsShortResponse(response: MeetingsShortResponse): TransformedMeetingsShortResponse {
+export function transformMeetingsShortResponse(
+  response: MeetingsShortResponse,
+): TransformedMeetingsShortResponse {
   return {
-    meetings: response.meetings.map(transformMeetingShortResponse)
+    meetings: response.meetings.map(transformMeetingShortResponse),
   };
 }
 
-function transformMeetingShortResponse(response: MeetingShortResponse): TransformedMeetingShortResponse {
-  const {timezone, ...rest} = response;
+function transformMeetingShortResponse(
+  response: MeetingShortResponse,
+): TransformedMeetingShortResponse {
+  const { timezone, ...rest } = response;
   return {
     ...rest,
     ...convertMeetingTimesAndDatesToLocal(response),
@@ -35,7 +36,7 @@ function transformMeetingShortResponse(response: MeetingShortResponse): Transfor
 }
 
 export function transformMeetingResponse(response: MeetingResponse): TransformedMeetingResponse {
-  const {timezone, respondents, ...rest} = response;
+  const { timezone, respondents, ...rest } = response;
   return {
     ...rest,
     ...convertMeetingTimesAndDatesToLocal(response),
@@ -43,7 +44,9 @@ export function transformMeetingResponse(response: MeetingResponse): Transformed
   };
 }
 
-function convertMeetingTimesAndDatesToLocal<M extends MeetingShortResponse>(meeting: M): Pick<M, 'minStartHour' | 'maxEndHour' | 'tentativeDates'> {
+function convertMeetingTimesAndDatesToLocal<M extends MeetingShortResponse>(
+  meeting: M,
+): Pick<M, "minStartHour" | "maxEndHour" | "tentativeDates"> {
   const {
     startHour: localStartHour,
     endHour: localEndHour,

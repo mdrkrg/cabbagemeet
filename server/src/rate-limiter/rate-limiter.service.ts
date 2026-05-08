@@ -1,5 +1,5 @@
-import { Inject, Injectable } from '@nestjs/common';
-import type { CustomRedisClientType } from '../cacher/cacher.module';
+import { Inject, Injectable } from "@nestjs/common";
+import type { CustomRedisClientType } from "../cacher/cacher.module";
 
 export interface IRateLimiter {
   tryAddRequestIfWithinLimits(key: string): Promise<boolean>;
@@ -11,7 +11,7 @@ export default class RateLimiterService {
   private readonly rateLimiters: IRateLimiter[] = [];
 
   constructor(
-    @Inject('REDIS_CLIENT')
+    @Inject("REDIS_CLIENT")
     private readonly redisClient: CustomRedisClientType | null,
   ) {}
 
@@ -24,11 +24,7 @@ export default class RateLimiterService {
   factory(intervalSeconds: number, limit: number): IRateLimiter {
     let rateLimiter: IRateLimiter | undefined;
     if (this.redisClient) {
-      rateLimiter = new RedisRateLimiter(
-        this.redisClient,
-        intervalSeconds,
-        limit,
-      );
+      rateLimiter = new RedisRateLimiter(this.redisClient, intervalSeconds, limit);
     } else {
       rateLimiter = new MemoryRateLimiter(intervalSeconds, limit);
     }
@@ -87,11 +83,7 @@ class RedisRateLimiter implements IRateLimiter {
   ) {}
 
   tryAddRequestIfWithinLimits(key: string) {
-    return this.client.tryAddRequestIfWithinLimits(
-      key,
-      this.intervalSeconds,
-      this.limit,
-    );
+    return this.client.tryAddRequestIfWithinLimits(key, this.intervalSeconds, this.limit);
   }
 
   shutdown() {}

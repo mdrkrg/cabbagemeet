@@ -1,10 +1,10 @@
-import { Entity, Column, PrimaryColumn, ManyToOne, Index } from 'typeorm';
-import { CustomJoinColumn } from '../custom-columns/custom-join-column';
-import Meeting from '../meetings/meeting.entity';
-import MicrosoftOAuth2 from './microsoft-oauth2.entity';
-import type { OAuth2CalendarEvent } from './oauth2-common';
+import { Entity, Column, PrimaryColumn, ManyToOne, Index } from "typeorm";
+import { CustomJoinColumn } from "../custom-columns/custom-join-column";
+import Meeting from "../meetings/meeting.entity";
+import MicrosoftOAuth2 from "./microsoft-oauth2.entity";
+import type { OAuth2CalendarEvent } from "./oauth2-common";
 
-@Entity('MicrosoftCalendarEvents')
+@Entity("MicrosoftCalendarEvents")
 export default class MicrosoftCalendarEvents {
   @PrimaryColumn()
   MeetingID: number;
@@ -13,7 +13,7 @@ export default class MicrosoftCalendarEvents {
   @PrimaryColumn()
   UserID: number;
 
-  @Column({ type: 'simple-json' })
+  @Column({ type: "simple-json" })
   Events: OAuth2CalendarEvent[];
 
   // The startDateTime parameter used in the previous API request
@@ -27,18 +27,18 @@ export default class MicrosoftCalendarEvents {
   PrevEndDateTime: string;
 
   // See https://learn.microsoft.com/en-us/graph/delta-query-events
-  @Column({ type: 'text' })
+  @Column({ type: "text" })
   DeltaLink: string;
 
   @ManyToOne(() => Meeting, (meeting) => meeting.MicrosoftCalendarEvents, {
-    onDelete: 'CASCADE',
+    onDelete: "CASCADE",
   })
-  @CustomJoinColumn({ name: 'MeetingID' })
+  @CustomJoinColumn({ name: "MeetingID" })
   Meeting: Meeting;
 
   @ManyToOne(() => MicrosoftOAuth2, (msftOAuth2) => msftOAuth2.Events, {
-    onDelete: 'CASCADE',
+    onDelete: "CASCADE",
   })
-  @CustomJoinColumn({ name: 'UserID' })
+  @CustomJoinColumn({ name: "UserID" })
   MicrosoftOAuth2: MicrosoftOAuth2;
 }

@@ -1,9 +1,9 @@
-import { ExecutionContext, Injectable } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
-import User from '../users/user.entity';
+import { ExecutionContext, Injectable } from "@nestjs/common";
+import { AuthGuard } from "@nestjs/passport";
+import User from "../users/user.entity";
 
 @Injectable()
-export default class OptionalJwtAuthGuard extends AuthGuard('jwt') {
+export default class OptionalJwtAuthGuard extends AuthGuard("jwt") {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     // This is necessary for JwtStrategy.validate to be called
     await super.canActivate(context);

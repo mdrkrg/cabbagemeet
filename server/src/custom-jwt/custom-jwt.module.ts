@@ -1,18 +1,18 @@
-import { Module } from '@nestjs/common';
-import { JwtModule } from '@nestjs/jwt';
-import ConfigService from '../config/config.service';
-import DbconfigModule from '../dbconfig/dbconfig.module';
-import { DbconfigService } from '../dbconfig/dbconfig.service';
-import CustomJwtService from './custom-jwt.service';
-import JwtStrategy, { getJWTSigningKey } from './jwt.strategy';
-import UsersModule from '../users/users.module';
-import CacherModule from '../cacher/cacher.module';
+import { Module } from "@nestjs/common";
+import { JwtModule } from "@nestjs/jwt";
+import ConfigService from "../config/config.service";
+import DbconfigModule from "../dbconfig/dbconfig.module";
+import { DbconfigService } from "../dbconfig/dbconfig.service";
+import CustomJwtService from "./custom-jwt.service";
+import JwtStrategy, { getJWTSigningKey } from "./jwt.strategy";
+import UsersModule from "../users/users.module";
+import CacherModule from "../cacher/cacher.module";
 
 @Module({
   imports: [DbconfigModule],
   providers: [
     {
-      provide: 'JWT_SIGNING_KEY',
+      provide: "JWT_SIGNING_KEY",
       useFactory: (
         configService: ConfigService,
         dbconfigService: DbconfigService,
@@ -22,7 +22,7 @@ import CacherModule from '../cacher/cacher.module';
       inject: [ConfigService, DbconfigService],
     },
   ],
-  exports: ['JWT_SIGNING_KEY'],
+  exports: ["JWT_SIGNING_KEY"],
 })
 class CustomJwtDepsModule {}
 
@@ -36,7 +36,7 @@ class CustomJwtDepsModule {}
       useFactory: (secret: string) => {
         return { secret };
       },
-      inject: ['JWT_SIGNING_KEY'],
+      inject: ["JWT_SIGNING_KEY"],
     }),
   ],
   providers: [CustomJwtService, JwtStrategy],

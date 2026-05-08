@@ -30,10 +30,20 @@ export const oauth2ProviderNamesMap: Record<OAuth2ProviderType, string> = Object
     {} as Record<OAuth2ProviderType, string>,
   );
 export const oauth2TableNames = oauth2ProviderNames.map((name) => `${name}OAuth2`);
+// Fix the table name for GENERIC_OIDC which doesn't derive cleanly from
+// capitalize("GENERIC_OIDC") → "Generic_oidc" → "Generic_oidcOAuth2".
+// The actual entity class and @Entity() name is "GenericOAuth2".
+const oidcTableIdx = oauth2ProviderTypes.indexOf(OAuth2ProviderType.GENERIC_OIDC);
+if (oidcTableIdx >= 0 && oidcTableIdx < oauth2TableNames.length) {
+  oauth2TableNames[oidcTableIdx] = "GenericOAuth2";
+}
 export const oauth2TableNamesMap = Object.entries(oauth2ProviderNamesMap).reduce(
   (o, [key, val]) => ({ ...o, [key]: `${val}OAuth2` }),
   {} as Record<OAuth2ProviderType, string>,
 );
+if (OAuth2ProviderType.GENERIC_OIDC in oauth2TableNamesMap) {
+  oauth2TableNamesMap[OAuth2ProviderType.GENERIC_OIDC] = "GenericOAuth2";
+}
 export const oauth2CreatedEventTableNamesMap = Object.entries(oauth2ProviderNamesMap).reduce(
   (o, [key, val]) => ({ ...o, [key]: `${val}CalendarCreatedEvent` }),
   {} as Record<OAuth2ProviderType, string>,

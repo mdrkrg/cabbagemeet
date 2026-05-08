@@ -5,16 +5,13 @@ import { Repository } from "typeorm";
 import ConfigService from "../config/config.service";
 import type { DatabaseType } from "../config/env.validation";
 import { normalizeDBError, UniqueConstraintFailed } from "../database.utils";
-import { oauth2ProviderNamesMap, oauth2TableNames } from "../oauth2/oauth2-common";
+import { oauth2TableNames } from "../oauth2/oauth2-common";
 import OAuth2Service from "../oauth2/oauth2.service";
 import User from "./user.entity";
 
 export class UserAlreadyExistsError extends Error {}
 
-const columnsForGetUser = [
-  "User",
-  ...Object.values(oauth2ProviderNamesMap).map((name) => `${name}OAuth2.LinkedCalendar`),
-];
+const columnsForGetUser = ["User", ...oauth2TableNames.map((name) => `${name}.LinkedCalendar`)];
 
 export function selectUserLeftJoinOAuth2Tables(repository: Repository<User>) {
   let query = repository.createQueryBuilder("User").select(columnsForGetUser);

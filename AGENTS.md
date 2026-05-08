@@ -2,90 +2,49 @@
 
 ## Build/Run/Test Commands
 
-### Server (NestJS + TypeScript)
+All commands use `vp`, the Vite+ unified CLI. Run `vp help` for available commands.
 
 ```bash
-# Install dependencies
-cd server && npm install
+# Install all workspace dependencies
+vp install
 
-# Development (hot-reload on port 3001)
-cd server && npm run start:dev
+# Development (client on :3000 proxy → server :3001, server on :3001)
+vp dev                               # Client dev server
+vp run cabbagemeet-server#start:dev  # Server dev mode
 
 # Production build
-cd server && npm run build
+vp run cabbagemeet-client#build      # Client: typecheck + vite build → client/dist/
+vp run cabbagemeet-server#build      # Server: nest build → server/dist/
 
-# Production start
-cd server && npm run start:prod
+# Format, lint, and type check all workspaces
+vp check
+vp check --fix                        # Auto-fix formatting issues
 
-# Lint
-cd server && npm run lint
+# Run tests
+vp test                               # Run all workspace tests
+vp run cabbagemeet-client#test:e2e    # Playwright E2E tests
+vp run cabbagemeet-server#test:e2e    # Server E2E (SQLite)
 
-# Type check
-cd server && npm run typecheck
-
-# Tests (E2E only — no unit tests exist yet)
-cd server && npm run test:e2e                # SQLite (in-memory)
-cd server && npm run test:e2e:mariadb        # Requires MariaDB
-cd server && npm run test:e2e:postgres       # Requires PostgreSQL
-
-# Run a specific E2E test file
-cd server && npx jest --config test/jest-e2e.json test/<file>.e2e-spec.ts
-```
-
-### Client (React + Create-React-App)
-
-```bash
-# Install dependencies
-cd client && npm install
-
-# Development (port 3000, proxies /api to :3001)
-cd client && npm start
-
-# Production build
-cd client && npm run build
-
-# Lint
-cd client && npx eslint src/
-
-# Type check
-cd client && npx tsc --noEmit
-
-# Unit tests (none exist — framework is Jest + Testing Library)
-cd client && npm test
-
-# E2E tests (Playwright — multi-browser)
-cd client && npx playwright test
-cd client && npx playwright test --project=chromium
-cd client && npx playwright test --project=firefox
-cd client && npx playwright test --project=webkit
-```
-
-### Docker (Monolith)
-
-```bash
-# Build monolith image (server + client)
-docker build -t cabbagemeet .
-
-# Run
-docker run -p 3001:3001 --env-file server/.env cabbagemeet
-```
-
-### RTK Query Codegen
-
-```bash
 # Regenerate client API types from OpenAPI spec (server must be running)
-cd client && npm run gen-api
+vp run cabbagemeet-client#gen-api
+
+# Docker production build
+docker build -t cabbagemeet .
+docker run -p 3001:3001 --env-file server/.env cabbagemeet
 ```
 
 ## Architecture
 
 ```
 cabbagemeet/
-├── client/                    # React 18 + CRA + Redux Toolkit + RTK Query
+├── package.json               # Root workspace config
+├── client/                    # React 18 + Vite + Redux Toolkit + RTK Query
+│   ├── index.html             # Vite entry point (was public/index.html in CRA)
+│   ├── vite.config.ts         # Vite config (proxy, aliases, build)
 │   └── src/
 │       ├── App.tsx            # Root routes (react-router-dom v6)
 │       ├── slices/            # Redux slices + RTK Query API
-│       │   ├── emptyApi.ts    # Base API (baseUrl, JWT header injection)
+│       │   ├── emptyApi.ts    # Base API (uses import.meta.env.VITE_API_BASE_URL)
 │       │   ├── api.ts         # AUTO-GENERATED from OpenAPI — DO NOT EDIT
 │       │   ├── enhancedApi.ts # Overrides: response transforms, cache invalidation, token management
 │       │   ├── authentication.ts  # JWT token in Redux + localStorage
@@ -149,7 +108,8 @@ cabbagemeet/
 
 ## Common Pitfalls
 
-- **DO NOT edit `client/src/slices/api.ts`** — it's auto-generated. Edit `enhancedApi.ts` instead.
+- **DO NOT edit `client/src/slices/api.ts`** — it's auto-generated from OpenAPI spec. Edit `enhancedApi.ts` instead.
+- **DO NOT edit `client/src/vite-env.d.ts`** — it's the standard Vite type declaration.
 - **Migrations must be added to all 3 DB directories** (sqlite/, mariadb/, postgres/).
 - **`strictNullChecks` is `false`** in server `tsconfig.json` — explicit null guards are in the code but the compiler won't enforce them.
 - **Circular dependencies** between `UsersService`, `MeetingsService`, and `OAuth2Service` are resolved via `ModuleRef` lazy injection in `onModuleInit()`.

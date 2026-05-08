@@ -44,7 +44,7 @@ async function bootstrap() {
     app.set('trust proxy', true);
   }
   // Note: in development, you will still see the X-Powered-By header in the browser.
-  // This is being added by the Create-React-App server, not by Nest.
+  // This is being added by the Vite dev server, not by Nest.
   app.disable('x-powered-by');
   app.use(morgan('combined'));
   app.use(

@@ -1,0 +1,59 @@
+# Dependencies
+node_modules/
+
+# Build output
+client/dist/
+server/dist/
+tsconfig.tsbuildinfo
+
+# SQLite databases
+*.db
+*.db-shm
+*.db-wal
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Server symlink to client build
+server/client/
+
+# Secrets & certificates
+*.key
+*.crt
+!server/test/*.key
+!server/test/*.crt
+
+# Logs
+logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# Testing / coverage
+coverage/
+client/playwright-report/
+client/test-results/
+.nyc_output/
+
+# Auto-generated
+client/openapi.json
+
+# OS
+.DS_Store
+
+# IDEs and editors
+.idea/
+.vscode/
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace

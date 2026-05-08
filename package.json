@@ -1,0 +1,22 @@
+{
+  "name": "cabbagemeet",
+  "private": true,
+  "type": "module",
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@nestjs/core",
+      "@parcel/watcher",
+      "bcrypt",
+      "better-sqlite3",
+      "esbuild",
+      "msw"
+    ]
+  },
+  "packageManager": "pnpm@11.0.8",
+  "devDependencies": {
+    "vite-plus": "catalog:"
+  },
+  "scripts": {
+    "prepare": "vp config"
+  }
+}

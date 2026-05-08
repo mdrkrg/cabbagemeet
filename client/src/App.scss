@@ -1,5 +1,5 @@
 @use "sass:map";
-@import "~bootstrap/scss/bootstrap";
+@import "bootstrap/scss/bootstrap";
 
 @include media-breakpoint-only(sm) {
   .app-main-container {

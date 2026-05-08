@@ -154,6 +154,9 @@ importers:
       helmet:
         specifier: ^6.0.1
         version: 6.2.0
+      jose:
+        specifier: ^5.10.0
+        version: 5.10.0
       jsonwebtoken:
         specifier: ^9.0.3
         version: 9.0.3
@@ -3644,6 +3647,9 @@ packages:
     peerDependenciesMeta:
       node-notifier:
         optional: true
+
+  jose@5.10.0:
+    resolution: {integrity: sha512-s+3Al/p9g32Iq+oqXxkW//7jk2Vig6FF1CFqzVXoTUXt2qz89YWbL+OwS17NFYEvxC35n0FKeGO2LGYSxeM2Gg==}
 
   js-levenshtein@1.1.6:
     resolution: {integrity: sha512-X2BB11YZtrRqY4EnQcLX5Rh373zbK4alC1FW7D7MBhL2gtcC17cTnr6DmfHZeS0s2rTHjUTMMHfG7gO8SSdw+g==}
@@ -9186,6 +9192,8 @@ snapshots:
       - babel-plugin-macros
       - supports-color
       - ts-node
+
+  jose@5.10.0: {}
 
   js-levenshtein@1.1.6: {}
 

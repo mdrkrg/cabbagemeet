@@ -173,7 +173,7 @@ export class EnvironmentVariables {
   // whether OAUTH2_GOOGLE_CLIENT_ID is configured.
   @IsOptional()
   @IsBooleanString()
-  OAUTH2_GOOGLE_ENABLED: string = "";
+  OAUTH2_GOOGLE_ENABLED?: string;
 
   // The Google OAuth2 client ID to be used for authentication and
   // Google calendar integration.
@@ -194,7 +194,7 @@ export class EnvironmentVariables {
   // whether OAUTH2_MICROSOFT_CLIENT_ID is configured.
   @IsOptional()
   @IsBooleanString()
-  OAUTH2_MICROSOFT_ENABLED: string = "";
+  OAUTH2_MICROSOFT_ENABLED?: string;
 
   // The Microsoft OAuth2 client ID to be used for authentication and
   // Outlook calendar integration.

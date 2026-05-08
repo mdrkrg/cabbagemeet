@@ -1,0 +1,33 @@
+# Standalone server-only image (API without client static files).
+# Build from the repo root:
+#   docker build -f server/Dockerfile -t cabbagemeet-server .
+
+FROM node:22-alpine AS build
+
+RUN corepack enable && corepack prepare pnpm@11.0.8 --activate
+WORKDIR /app
+
+COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
+COPY server/package.json server/tsconfig.json server/tsconfig.build.json server/nest-cli.json server/
+
+RUN pnpm install --frozen-lockfile
+
+COPY server/src server/src/
+COPY server/migrations server/migrations/
+RUN find server/src -name "*.spec.ts" -delete
+RUN pnpm --filter cabbagemeet-server build
+
+FROM node:22-alpine
+
+RUN corepack enable && corepack prepare pnpm@11.0.8 --activate
+WORKDIR /app
+
+COPY --from=build /app/pnpm-workspace.yaml /app/pnpm-lock.yaml /app/package.json ./
+COPY --from=build /app/server/package.json server/
+RUN pnpm install --frozen-lockfile --prod --filter cabbagemeet-server
+
+COPY --from=build /app/server/dist dist/
+COPY --from=build /app/server/migrations migrations/
+
+ENV NODE_ENV=production
+CMD ["node", "dist/src/main"]

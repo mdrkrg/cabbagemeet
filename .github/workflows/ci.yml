@@ -2,21 +2,18 @@ name: CI
 
 on:
   push:
-    branches: [ master ]
+    branches: [master]
   pull_request:
-    branches: [ master ]
+    branches: [master]
 
 jobs:
   server:
     timeout-minutes: 30
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: server
     strategy:
       matrix:
         # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
-        node-version: [18.x]
+        node-version: [22.x]
     services:
       mariadb:
         image: mariadb:10.5
@@ -47,72 +44,63 @@ jobs:
           --health-timeout 5s
           --health-retries 5
     steps:
-    - uses: actions/checkout@v3
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v3
-      with:
-        node-version: ${{ matrix.node-version }}
-        cache: 'npm'
-        cache-dependency-path: server/package-lock.json
-    - run: npm ci
-    - name: E2E tests (SQLite)
-      run: npm run test:e2e
-    - name: E2E tests (MariaDB)
-      run: npm run test:e2e:mariadb
-    - name: E2E tests (Postgres)
-      run: npm run test:e2e:postgres
+      - uses: actions/checkout@v4
+      - uses: voidzero-dev/setup-vp@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: true
+      - run: vp install
+      - run: vp run cabbagemeet-server#build
+        env:
+          SQLITE_PATH: ":memory:"
+      - name: E2E tests (SQLite)
+        run: vp run cabbagemeet-server#test:e2e
+      - name: E2E tests (MariaDB)
+        run: vp run cabbagemeet-server#test:e2e:mariadb
+      - name: E2E tests (Postgres)
+        run: vp run cabbagemeet-server#test:e2e:postgres
 
   client:
     timeout-minutes: 30
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: client
     steps:
-    - uses: actions/checkout@v3
-    - uses: actions/setup-node@v3
-      with:
-        cache: 'npm'
-        # See https://github.com/actions/setup-node/blob/main/docs/advanced-usage.md#caching-packages-data
-        # Server deps are needed for running Playwright testes
-        cache-dependency-path: |
-          client/package-lock.json
-          server/package-lock.json
-    - run: npm ci
-    - name: Run unit tests
-      run: npm run test
-    - name: Create static build
-      run: |
-        npm run build
-        cd ../server
-        ln -sf ../client/build client
-        npm ci
-        npm run build
-    # Adapted from https://playwrightsolutions.com/playwright-github-action-to-cache-the-browser-binaries/
-    - name: Get installed Playwright version
-      run: echo PLAYWRIGHT_VERSION=$(node -e "console.log(require('./package-lock.json').dependencies['@playwright/test'].version)") >> $GITHUB_ENV
-    - name: Cache playwright binaries
-      uses: actions/cache@v3
-      with:
-        path: "~/.cache/ms-playwright"
-        key: linux-playwright-${{ env.PLAYWRIGHT_VERSION }}
-    - run: npx playwright install --with-deps
-      if: steps.playwright-cache.outputs.cache-hit != 'true'
-    - name: Set timezone
-      run: sudo ln -sf /usr/share/zoneinfo/America/New_York /etc/localtime
-    - name: Run Playwright tests
-      run: npm run test:e2e
-      env:
-        DATABASE_TYPE: sqlite
-        SQLITE_PATH: ":memory:"
-        HOST: localhost
-        PORT: "3001"
-        PUBLIC_URL: "http://localhost:3001"
-        VERIFY_SIGNUP_EMAIL_ADDRESS: "false"
-        HOURLY_MEETING_CREATION_LIMIT_PER_IP: "0"
-    - uses: actions/upload-artifact@v3
-      if: failure()
-      with:
-        name: test-results
-        path: client/test-results/
-        retention-days: 3
+      - uses: actions/checkout@v4
+      - uses: voidzero-dev/setup-vp@v1
+        with:
+          node-version: "22"
+          cache: true
+      - run: vp install
+      - run: vp check
+      - run: vp run cabbagemeet-client#build
+      - run: vp run cabbagemeet-server#build
+        env:
+          SQLITE_PATH: ":memory:"
+      - name: Get installed Playwright version
+        run: |
+          echo PLAYWRIGHT_VERSION=$(node -e "console.log(require('./client/node_modules/@playwright/test/package.json').version)") >> $GITHUB_ENV
+      - name: Cache playwright binaries
+        uses: actions/cache@v4
+        with:
+          path: "~/.cache/ms-playwright"
+          key: linux-playwright-${{ env.PLAYWRIGHT_VERSION }}
+      - run: vp exec playwright install --with-deps
+        working-directory: client
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+      - name: Set timezone
+        run: sudo ln -sf /usr/share/zoneinfo/America/New_York /etc/localtime
+      - name: Run Playwright E2E tests
+        run: vp run cabbagemeet-client#test:e2e
+        env:
+          DATABASE_TYPE: sqlite
+          SQLITE_PATH: ":memory:"
+          HOST: localhost
+          PORT: "3001"
+          PUBLIC_URL: "http://localhost:3001"
+          VERIFY_SIGNUP_EMAIL_ADDRESS: "false"
+          HOURLY_MEETING_CREATION_LIMIT_PER_IP: "0"
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: test-results
+          path: client/test-results/
+          retention-days: 3

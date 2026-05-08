@@ -28,6 +28,16 @@ vp run cabbagemeet-server#test:e2e    # Server E2E (SQLite)
 # Regenerate client API types from OpenAPI spec (server must be running)
 vp run cabbagemeet-client#gen-api
 
+# Generate database migrations (must be run for each DB type)
+vp run cabbagemeet-server#migration:generate:sqlite
+vp run cabbagemeet-server#migration:generate:mariadb
+vp run cabbagemeet-server#migration:generate:postgres
+
+# Run pending migrations
+vp run cabbagemeet-server#migration:run:sqlite
+vp run cabbagemeet-server#migration:run:mariadb
+vp run cabbagemeet-server#migration:run:postgres
+
 # Docker production build
 docker build -t cabbagemeet .
 docker run -p 3001:3001 --env-file server/.env cabbagemeet

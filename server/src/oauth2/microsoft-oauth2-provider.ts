@@ -1,10 +1,5 @@
 import * as fs from "fs";
-import {
-  createHash,
-  randomBytes as randomBytesCb,
-  randomInt as randomIntCb,
-  X509Certificate,
-} from "crypto";
+import { randomBytes as randomBytesCb, X509Certificate } from "crypto";
 import { promisify } from "util";
 import { Logger } from "@nestjs/common";
 import ConfigService from "../config/config.service";
@@ -45,9 +40,9 @@ import type {
 } from "./oauth2-response-types";
 import AbstractOAuth2 from "./abstract-oauth2.entity";
 import CacherService from "../cacher/cacher.service";
+import { generatePkceCodeChallenge, generatePkceCodeVerifier } from "./pkce.utils";
 
 const randomBytes: (size: number) => Promise<Buffer> = promisify(randomBytesCb);
-const randomInt: (max: number) => Promise<number> = promisify(randomIntCb);
 
 // See https://learn.microsoft.com/en-us/graph/api/resources/calendar?view=graph-rest-1.0&preserve-view=true
 const microsoftCalendarScopes = ["https://graph.microsoft.com/Calendars.ReadWrite"];
@@ -69,22 +64,7 @@ const MICROSOFT_API_BASE_URL = "https://graph.microsoft.com/v1.0";
 const MICROSOFT_API_CALENDAR_EVENTS_DELTA_URL = `${MICROSOFT_API_BASE_URL}/me/calendarView/delta`;
 const MICROSOFT_API_CALENDAR_EVENTS_URL = `${MICROSOFT_API_BASE_URL}/me/events`;
 
-// See https://www.oauth.com/oauth2-servers/pkce/authorization-request/
-const pkceCodeVerifierValidChars =
-  "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~";
-const pkceCodeVerifierLength = 43;
 const codeChallengeLifetimeSeconds = 5 * SECONDS_PER_MINUTE;
-async function generatePkceCodeVerifier(): Promise<string> {
-  const arr = Array<string>(pkceCodeVerifierLength);
-  for (let i = 0; i < pkceCodeVerifierLength; i++) {
-    const randomIdx = await randomInt(pkceCodeVerifierValidChars.length);
-    arr[i] = pkceCodeVerifierValidChars[randomIdx];
-  }
-  return arr.join("");
-}
-function generatePkceCodeChallenge(codeVerifier: string): string {
-  return createHash("sha256").update(codeVerifier).digest("base64url");
-}
 
 // See https://learn.microsoft.com/en-us/azure/active-directory/develop/active-directory-certificate-credentials#header
 function certificateToX5t(pemEncodedCert: string): string {

@@ -1,17 +1,11 @@
-import {
-  Entity,
-  Column,
-  PrimaryGeneratedColumn,
-  Index,
-  OneToMany,
-  OneToOne,
-} from 'typeorm';
-import GoogleOAuth2 from '../oauth2/google-oauth2.entity';
-import MicrosoftOAuth2 from '../oauth2/microsoft-oauth2.entity';
-import MeetingRespondent from '../meetings/meeting-respondent.entity';
-import Meeting from '../meetings/meeting.entity';
+import { Entity, Column, PrimaryGeneratedColumn, Index, OneToMany, OneToOne } from "typeorm";
+import GenericOAuth2 from "../oauth2/generic-oauth2.entity";
+import GoogleOAuth2 from "../oauth2/google-oauth2.entity";
+import MicrosoftOAuth2 from "../oauth2/microsoft-oauth2.entity";
+import MeetingRespondent from "../meetings/meeting-respondent.entity";
+import Meeting from "../meetings/meeting.entity";
 
-@Entity('User')
+@Entity("User")
 export default class User {
   @PrimaryGeneratedColumn()
   ID: number;
@@ -46,4 +40,7 @@ export default class User {
 
   @OneToOne(() => MicrosoftOAuth2, (msftUser) => msftUser.User)
   MicrosoftOAuth2?: MicrosoftOAuth2;
+
+  @OneToOne(() => GenericOAuth2, (oidcUser) => oidcUser.User)
+  GenericOAuth2?: GenericOAuth2;
 }

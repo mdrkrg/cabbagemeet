@@ -1,10 +1,6 @@
 // Adapted from https://docs.nestjs.com/techniques/configuration#custom-validate-function
 
-import {
-  plainToInstance,
-  Transform,
-  TransformFnParams,
-} from 'class-transformer';
+import { plainToInstance, Transform, TransformFnParams } from "class-transformer";
 import {
   IsBooleanString,
   IsEmail,
@@ -17,27 +13,27 @@ import {
   Max,
   Min,
   validateSync,
-} from 'class-validator';
-import { stripTrailingSlash } from '../misc.utils';
+} from "class-validator";
+import { stripTrailingSlash } from "../misc.utils";
 
 // Adapted from https://stackoverflow.com/a/68800520
-const environments = ['development', 'production', 'test'] as const;
-export type Environment = typeof environments[number];
+const environments = ["development", "production", "test"] as const;
+export type Environment = (typeof environments)[number];
 
 // TODO: support MySQL too
-const databaseTypes = ['sqlite', 'mariadb', 'postgres'] as const;
-export type DatabaseType = typeof databaseTypes[number];
+const databaseTypes = ["sqlite", "mariadb", "postgres"] as const;
+export type DatabaseType = (typeof databaseTypes)[number];
 
 // See https://github.com/validatorjs/validator.js/blob/master/src/lib/isBoolean.js
-const booleanTrueStrings = ['true', '1', 'yes'];
+const booleanTrueStrings = ["true", "1", "yes"];
 export function isBooleanStringTrue(s: string) {
   return booleanTrueStrings.includes(s.toLowerCase());
 }
 
 function stringToNonNegativeNumber({ value }: TransformFnParams) {
-  if (typeof value === 'string') {
+  if (typeof value === "string") {
     // This also accepts trailing spaces ... meh
-    if (value === '' || value[0] < '0' || value[0] > '9') {
+    if (value === "" || value[0] < "0" || value[0] > "9") {
       return NaN;
     }
     return +value;
@@ -60,13 +56,12 @@ export class EnvironmentVariables {
   // Needs to be a string for IsPort() to work.
   // Port 3000 is already used by Create-React-App, so 3001 is chosen as the
   // default instead.
-  PORT = '3001';
+  PORT = "3001";
 
   // The IP address or hostname to which the listening socket should be bound.
   @IsOptional()
   @IsString()
-  HOST: string =
-    process.env.NODE_ENV === 'production' ? '0.0.0.0' : '127.0.0.1';
+  HOST: string = process.env.NODE_ENV === "production" ? "0.0.0.0" : "127.0.0.1";
 
   // The public-facing URL of the website.
   // Will be used when creating Google calendar events and sending emails.
@@ -80,7 +75,7 @@ export class EnvironmentVariables {
   // creating the React build.
   @IsOptional()
   @IsBooleanString()
-  ENABLE_CORS = 'false';
+  ENABLE_CORS = "false";
 
   // A comma-separated list of origins to enable for CORS, in addition to
   // the origin of PUBLIC_URL. ENABLE_CORS must be set to true for this
@@ -96,7 +91,7 @@ export class EnvironmentVariables {
   @IsString()
   // __dirname is like .../server/dist/src/config
   // This assumes that a folder named "client" is in the server directory
-  STATIC_ROOT: string = __dirname + '/../../../client';
+  STATIC_ROOT: string = __dirname + "/../../../client";
 
   // Key used for JWT signing and also for encryption of some URL parameters.
   // If unspecified, a new random key is created the first time the server
@@ -174,6 +169,12 @@ export class EnvironmentVariables {
   @IsString()
   POSTGRES_DATABASE?: string;
 
+  // Explicitly enable/disable Google OAuth2. If unset, inferred from
+  // whether OAUTH2_GOOGLE_CLIENT_ID is configured.
+  @IsOptional()
+  @IsBooleanString()
+  OAUTH2_GOOGLE_ENABLED: string = "";
+
   // The Google OAuth2 client ID to be used for authentication and
   // Google calendar integration.
   @IsOptional()
@@ -188,6 +189,12 @@ export class EnvironmentVariables {
   @IsOptional()
   @IsString()
   OAUTH2_GOOGLE_CLIENT_SECRET?: string;
+
+  // Explicitly enable/disable Microsoft OAuth2. If unset, inferred from
+  // whether OAUTH2_MICROSOFT_CLIENT_ID is configured.
+  @IsOptional()
+  @IsBooleanString()
+  OAUTH2_MICROSOFT_ENABLED: string = "";
 
   // The Microsoft OAuth2 client ID to be used for authentication and
   // Outlook calendar integration.
@@ -229,20 +236,48 @@ export class EnvironmentVariables {
   // 'consumers' if only personal Microsoft accounts can be used
   @IsOptional()
   @IsString()
-  OAUTH2_MICROSOFT_TENANT_ID = 'consumers';
+  OAUTH2_MICROSOFT_TENANT_ID = "consumers";
+
+  // Generic OIDC provider (auth-only, no calendar integration)
+
+  @IsOptional()
+  @IsBooleanString()
+  OIDC_ENABLED: string = "false";
+
+  // Display name for the generic OIDC provider, e.g. "Company SSO"
+  @IsOptional()
+  @IsString()
+  OIDC_NAME: string = "";
+
+  // The /.well-known/openid-configuration URL
+  @IsOptional()
+  @IsString()
+  OIDC_DISCOVERY_URL: string = "";
+
+  @IsOptional()
+  @IsString()
+  OIDC_CLIENT_ID: string = "";
+
+  @IsOptional()
+  @IsString()
+  OIDC_CLIENT_SECRET: string = "";
+
+  @IsOptional()
+  @IsString()
+  OIDC_REDIRECT_URI: string = "";
 
   // Should be set to true if this app is behind a reverse proxy AND the proxy
   // has been configured to set the X-Forwarded-For header
   @IsOptional()
   @IsBooleanString()
-  TRUST_PROXY = 'false';
+  TRUST_PROXY = "false";
 
   // If set to true, users are sent a verification link to the email
   // address which they used when signing up.
   // If set to false, user accounts are created as soon as they sign up.
   @IsOptional()
   @IsBooleanString()
-  VERIFY_SIGNUP_EMAIL_ADDRESS = 'true';
+  VERIFY_SIGNUP_EMAIL_ADDRESS = "true";
 
   // If both SMTP_HOST and MAILERSEND_API_KEY are unset, then all
   // email-related functionality will be disabled (including signup
@@ -304,7 +339,7 @@ export class EnvironmentVariables {
 
   @IsOptional()
   @IsPort()
-  REDIS_PORT = '6379';
+  REDIS_PORT = "6379";
 
   @IsOptional()
   @IsInt()
@@ -313,9 +348,7 @@ export class EnvironmentVariables {
   REDIS_DATABASE = 0;
 }
 
-export function validate(
-  config: Record<string, unknown>,
-): EnvironmentVariables {
+export function validate(config: Record<string, unknown>): EnvironmentVariables {
   const validatedConfig = plainToInstance(EnvironmentVariables, config, {
     enableImplicitConversion: true,
   });

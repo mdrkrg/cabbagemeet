@@ -78,7 +78,7 @@ cabbagemeet/
 │       ├── common-responses/  # Standardized API error response DTOs
 │       └── custom-migrations/ # Index creation + cleanup migrations
 ├── server/migrations/         # DB migrations (sqlite/ mariadb/ postgres/ — keep in sync)
-├── Dockerfile                 # Multi-stage monolith build
+├── Containerfile              # Multi-stage monolith build
 └── .github/workflows/ci.yml   # CI: server E2E (3 DBs) + client build + Playwright
 ```
 

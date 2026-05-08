@@ -1,11 +1,13 @@
-import { ServerInfoResponse, useGetServerInfoQuery } from "slices/api";
+import { useGetServerInfoQuery } from "slices/api";
 import { OAuth2Provider } from "utils/oauth2-common";
 import ContinueWithGoogleButton from "./ContinueWithGoogleButton";
 import ContinueWithMicrosoftButton from "./ContinueWithMicrosoftButton";
+import ContinueWithOidcButton from "./ContinueWithOidcButton";
 
 const buttonComponents: Record<OAuth2Provider, typeof ContinueWithGoogleButton> = {
   google: ContinueWithGoogleButton,
   microsoft: ContinueWithMicrosoftButton,
+  oidc: ContinueWithOidcButton,
 };
 
 export default function OAuth2ProviderButtons({ reason }: { reason: "signup" | "login" }) {
@@ -13,9 +15,10 @@ export default function OAuth2ProviderButtons({ reason }: { reason: "signup" | "
   if (data === undefined) {
     return null;
   }
-  const buttons = Object.entries(buttonComponents)
-    .filter(([provider]) => data[(provider + "OAuth2IsSupported") as keyof ServerInfoResponse])
-    .map(([_, component]) => component);
+  const enabledProviders = data.oidcProviders?.filter((p) => p.enabled).map((p) => p.type) ?? [];
+  const buttons = enabledProviders
+    .filter((type): type is OAuth2Provider => type in buttonComponents)
+    .map((type) => buttonComponents[type]);
   if (buttons.length === 0) {
     return null;
   }

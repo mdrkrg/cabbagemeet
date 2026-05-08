@@ -56,12 +56,14 @@ export default function ContinueWithButton({
   return (
     <>
       <ButtonWithSpinner className={className} onClick={onClick} isLoading={isLoading || isSuccess}>
-        <img
-          src={logoPath}
-          alt={`${capitalizedProvider} Logo`}
-          className="me-3"
-          style={{ maxHeight: "1.2em", verticalAlign: "middle" }}
-        />
+        {logoPath && (
+          <img
+            src={logoPath}
+            alt={`${capitalizedProvider} Logo`}
+            className="me-3"
+            style={{ maxHeight: "1.2em", verticalAlign: "middle" }}
+          />
+        )}
         <span style={{ verticalAlign: "middle" }}>Continue with {capitalizedProvider}</span>
       </ButtonWithSpinner>
       {error && (

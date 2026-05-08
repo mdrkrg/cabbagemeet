@@ -1,5 +1,5 @@
-const LOCALSTORAGE_TOKEN_KEY = 'token';
-const SESSIONSTORAGE_NONCE_KEY = 'nonce';
+const LOCALSTORAGE_TOKEN_KEY = "token";
+const SESSIONSTORAGE_NONCE_KEY = "nonce";
 
 export function getLocalToken(): string | null {
   return localStorage.getItem(LOCALSTORAGE_TOKEN_KEY);
@@ -31,18 +31,15 @@ export function removeSessionNonce() {
 
 // Copied from https://github.com/blakeembrey/universal-base64url/blob/master/src/index.ts
 async function encodeBase64Url(data: Uint8Array): Promise<string> {
-  return (await encodeBase64(data))
-    .replace(/\//g, '_')
-    .replace(/\+/g, '-')
-    .replace(/=+$/g, '');
+  return (await encodeBase64(data)).replace(/\//g, "_").replace(/\+/g, "-").replace(/=+$/g, "");
 }
 
 // Copied from https://stackoverflow.com/a/66046176
 async function encodeBase64(data: Uint8Array): Promise<string> {
-  const dataURL = await new Promise<string>(resolve => {
+  const dataURL = await new Promise<string>((resolve) => {
     const reader = new FileReader();
     reader.onload = () => resolve(reader.result as string);
-    reader.readAsDataURL(new Blob([data]));
+    reader.readAsDataURL(new Blob([data as BlobPart]));
   });
   /*
     The result looks like

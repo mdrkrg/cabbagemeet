@@ -74,6 +74,20 @@ const injectedRtkApi = api.injectEndpoints({
         body: queryArg,
       }),
     }),
+    loginWithOidc: build.mutation<LoginWithOidcApiResponse, LoginWithOidcApiArg>({
+      query: (queryArg) => ({
+        url: `/api/login-with-oidc`,
+        method: "POST",
+        body: queryArg,
+      }),
+    }),
+    signupWithOidc: build.mutation<SignupWithOidcApiResponse, SignupWithOidcApiArg>({
+      query: (queryArg) => ({
+        url: `/api/signup-with-oidc`,
+        method: "POST",
+        body: queryArg,
+      }),
+    }),
     confirmLinkGoogleAccount: build.mutation<
       ConfirmLinkGoogleAccountApiResponse,
       ConfirmLinkGoogleAccountApiArg
@@ -90,6 +104,16 @@ const injectedRtkApi = api.injectEndpoints({
     >({
       query: (queryArg) => ({
         url: `/api/confirm-link-microsoft-account`,
+        method: "POST",
+        body: queryArg,
+      }),
+    }),
+    confirmLinkOidcAccount: build.mutation<
+      ConfirmLinkOidcAccountApiResponse,
+      ConfirmLinkOidcAccountApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/confirm-link-oidc-account`,
         method: "POST",
         body: queryArg,
       }),
@@ -257,10 +281,16 @@ export type SignupWithGoogleApiResponse = /** status 200  */ CustomRedirectRespo
 export type SignupWithGoogleApiArg = OAuth2ConsentPostRedirectDto;
 export type SignupWithMicrosoftApiResponse = /** status 200  */ CustomRedirectResponse;
 export type SignupWithMicrosoftApiArg = OAuth2ConsentPostRedirectDto;
+export type LoginWithOidcApiResponse = /** status 200  */ CustomRedirectResponse;
+export type LoginWithOidcApiArg = OAuth2ConsentPostRedirectDto;
+export type SignupWithOidcApiResponse = /** status 200  */ CustomRedirectResponse;
+export type SignupWithOidcApiArg = OAuth2ConsentPostRedirectDto;
 export type ConfirmLinkGoogleAccountApiResponse = /** status 200  */ UserResponse;
 export type ConfirmLinkGoogleAccountApiArg = ConfirmLinkAccountDto;
 export type ConfirmLinkMicrosoftAccountApiResponse = /** status 200  */ UserResponse;
 export type ConfirmLinkMicrosoftAccountApiArg = ConfirmLinkAccountDto;
+export type ConfirmLinkOidcAccountApiResponse = /** status 200  */ UserResponse;
+export type ConfirmLinkOidcAccountApiArg = ConfirmLinkAccountDto;
 export type GetSelfInfoApiResponse = /** status 200  */ UserResponse;
 export type GetSelfInfoApiArg = void;
 export type EditUserApiResponse = /** status 200  */ UserResponse;
@@ -479,6 +509,11 @@ export type PutRespondentDto = {
 export type ServerInfoResponse = {
   googleOAuth2IsSupported: boolean;
   microsoftOAuth2IsSupported: boolean;
+  oidcProviders: Array<{
+    type: string;
+    name: string;
+    enabled: boolean;
+  }>;
 };
 export const {
   useSignupMutation,
@@ -491,8 +526,11 @@ export const {
   useLoginWithMicrosoftMutation,
   useSignupWithGoogleMutation,
   useSignupWithMicrosoftMutation,
+  useLoginWithOidcMutation,
+  useSignupWithOidcMutation,
   useConfirmLinkGoogleAccountMutation,
   useConfirmLinkMicrosoftAccountMutation,
+  useConfirmLinkOidcAccountMutation,
   useGetSelfInfoQuery,
   useEditUserMutation,
   useDeleteUserMutation,

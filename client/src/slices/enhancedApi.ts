@@ -115,6 +115,9 @@ export const enhancedApi = replacedApi.enhanceEndpoints({
     unlinkMicrosoftCalendar: {
       onQueryStarted: (arg, api) => editUser_onQueryStarted(arg, api),
     },
+    confirmLinkOidcAccount: {
+      onQueryStarted: (arg, api) => editUser_onQueryStarted(arg, api),
+    },
     getMeeting: {
       providesTags: (result, error, arg) => [{ type: "meeting", id: arg }],
     },

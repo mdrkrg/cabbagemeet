@@ -11,12 +11,14 @@ import styles from "./ContinueWithButton.module.css";
 export default function ContinueWithButton({
   reason,
   provider,
+  displayName,
   useLoginMutation,
   useSignupMutation,
   className,
 }: {
   reason: "signup" | "login";
   provider: OAuth2Provider;
+  displayName?: string;
   useLoginMutation: typeof useLoginWithGoogleMutation;
   useSignupMutation: typeof useSignupWithGoogleMutation;
   className?: string;
@@ -50,7 +52,7 @@ export default function ContinueWithButton({
       window.removeEventListener("pageshow", listener);
     };
   }, [reset]);
-  const capitalizedProvider = capitalize(provider);
+  const displayNameOrCapitalized = displayName || capitalize(provider);
   const logoPath = logos[provider];
   className = `btn ${styles.ContinueWithButton} border w-100` + (className ? ` ${className}` : "");
   return (
@@ -59,12 +61,12 @@ export default function ContinueWithButton({
         {logoPath && (
           <img
             src={logoPath}
-            alt={`${capitalizedProvider} Logo`}
+            alt={`${displayNameOrCapitalized} Logo`}
             className="me-3"
             style={{ maxHeight: "1.2em", verticalAlign: "middle" }}
           />
         )}
-        <span style={{ verticalAlign: "middle" }}>Continue with {capitalizedProvider}</span>
+        <span style={{ verticalAlign: "middle" }}>Continue with {displayNameOrCapitalized}</span>
       </ButtonWithSpinner>
       {error && (
         <p className="text-danger text-center mb-0 mt-3">

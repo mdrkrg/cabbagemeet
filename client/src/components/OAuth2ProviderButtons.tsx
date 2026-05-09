@@ -15,18 +15,25 @@ export default function OAuth2ProviderButtons({ reason }: { reason: "signup" | "
   if (data === undefined) {
     return null;
   }
-  const enabledProviders = data.oidcProviders?.filter((p) => p.enabled).map((p) => p.type) ?? [];
-  const buttons = enabledProviders
-    .filter((type): type is OAuth2Provider => type in buttonComponents)
-    .map((type) => buttonComponents[type]);
-  if (buttons.length === 0) {
+  const enabledEntries = (data.oidcProviders ?? []).filter((p) => p.enabled);
+  if (enabledEntries.length === 0) {
     return null;
   }
   return (
     <>
-      {buttons.map((ProviderButton, i) => (
-        <ProviderButton key={i} reason={reason} className={i === 0 ? undefined : "mt-4"} />
-      ))}
+      {enabledEntries.map(({ type, name }, i) => {
+        const Component = buttonComponents[type as OAuth2Provider];
+        if (!Component) return null;
+        const displayName = type === "oidc" ? name : undefined;
+        return (
+          <Component
+            key={i}
+            reason={reason}
+            displayName={displayName}
+            className={i === 0 ? undefined : "mt-4"}
+          />
+        );
+      })}
       <ORBar />
     </>
   );

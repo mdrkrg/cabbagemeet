@@ -6,15 +6,18 @@ import ContinueWithButton from "./ContinueWithButton";
 
 export default function ContinueWithGoogleButton({
   reason,
+  displayName,
   className,
 }: {
   reason: "signup" | "login";
+  displayName?: string;
   className?: string;
 }) {
   return (
     <ContinueWithButton
       reason={reason}
       provider="google"
+      displayName={displayName}
       useLoginMutation={useLoginWithGoogleMutation}
       useSignupMutation={useSignupWithGoogleMutation}
       className={className}

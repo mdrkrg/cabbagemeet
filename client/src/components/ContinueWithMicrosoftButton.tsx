@@ -6,15 +6,18 @@ import ContinueWithButton from "./ContinueWithButton";
 
 export default function ContinueWithMicrosoftButton({
   reason,
+  displayName,
   className,
 }: {
   reason: "signup" | "login";
+  displayName?: string;
   className?: string;
 }) {
   return (
     <ContinueWithButton
       reason={reason}
       provider="microsoft"
+      displayName={displayName}
       useLoginMutation={useLoginWithMicrosoftMutation}
       useSignupMutation={useSignupWithMicrosoftMutation}
       className={className}

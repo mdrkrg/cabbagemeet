@@ -94,6 +94,7 @@ export default class GenericOidcProvider implements IOAuth2Provider {
     return {
       authzEndpoint: this.discovery.authorization_endpoint,
       tokenEndpoint: this.discovery.token_endpoint,
+      revokeEndpoint: this.discovery.revocation_endpoint,
       scopes: [...oidcScopes, "offline_access"],
     };
   }

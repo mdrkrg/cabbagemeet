@@ -7,6 +7,7 @@ export interface OIDCDiscovery {
   token_endpoint: string;
   userinfo_endpoint?: string;
   jwks_uri?: string;
+  revocation_endpoint?: string;
   scopes_supported?: string[];
   response_types_supported?: string[];
 }

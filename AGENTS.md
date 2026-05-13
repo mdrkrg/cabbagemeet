@@ -3,44 +3,47 @@
 ## Build/Run/Test Commands
 
 All commands use `vp`, the Vite+ unified CLI. Run `vp help` for available commands.
+Root-level npm scripts provide shortcuts for common operations:
 
 ```bash
 # Install all workspace dependencies
 vp install
 
 # Development (client on :3000 proxy → server :3001, server on :3001)
-vp dev                               # Client dev server
-vp run cabbagemeet-server#start:dev  # Server dev mode
+vp run dev                    # Client dev server
+vp run dev:server             # Server dev mode (watch)
+vp run dev:all                # Run both client + server in parallel (single terminal)
 
 # Production build
-vp run cabbagemeet-client#build      # Client: typecheck + vite build → client/dist/
-vp run cabbagemeet-server#build      # Server: nest build → server/dist/
+vp run build                  # Build both client + server
+vp run build:client           # Client: typecheck + vite build → client/dist/
+vp run build:server           # Server: nest build → server/dist/
 
 # Format, lint, and type check all workspaces
-vp check
-vp check --fix                        # Auto-fix formatting issues
+vp check                      # Full check (format + lint + type)
+vp check --fix                # Auto-fix formatting issues
 
 # Run tests
-vp test                               # Run all workspace tests
-vp run cabbagemeet-client#test:e2e    # Playwright E2E tests
-vp run cabbagemeet-server#test:e2e    # Server E2E (SQLite)
+vp run test                   # Client tests (vitest)
+vp run test:server            # Server unit tests (jest)
+vp run test:server:e2e        # Server E2E (SQLite)
 
 # Regenerate client API types from OpenAPI spec (server must be running)
-vp run cabbagemeet-client#gen-api
+vp run gen-api
 
-# Generate database migrations (must be run for each DB type)
-vp run cabbagemeet-server#migration:generate:sqlite
-vp run cabbagemeet-server#migration:generate:mariadb
-vp run cabbagemeet-server#migration:generate:postgres
-
-# Run pending migrations
-vp run cabbagemeet-server#migration:run:sqlite
-vp run cabbagemeet-server#migration:run:mariadb
-vp run cabbagemeet-server#migration:run:postgres
+# Database migrations
+vp run migration:generate     # Generate SQLite migration
+vp run migration:run          # Run pending SQLite migration
 
 # Docker production build
-docker build -t cabbagemeet .
-docker run -p 3001:3001 --env-file server/.env cabbagemeet
+vp run docker:build
+vp run docker:run
+
+# Underlying vp commands (use these for --filter, non-SQLite migrations, etc.)
+# vp dev
+# vp run cabbagemeet-server#start:dev
+# vp run cabbagemeet-server#migration:generate:mariadb
+# vp run cabbagemeet-server#migration:run:postgres
 ```
 
 ## Architecture

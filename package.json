@@ -3,7 +3,21 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "prepare": "vp config"
+    "prepare": "vp config",
+    "dev": "vp run cabbagemeet-client#dev",
+    "dev:server": "vp run cabbagemeet-server#dev",
+    "dev:all": "vp run dev -r -F './client' -F './server' --parallel --log labeled",
+    "build": "vp run build -r",
+    "build:client": "vp run cabbagemeet-client#build",
+    "build:server": "vp run cabbagemeet-server#build",
+    "test": "vp test",
+    "test:server": "vp run cabbagemeet-server#test",
+    "test:server:e2e": "vp run cabbagemeet-server#test:e2e",
+    "gen-api": "vp run cabbagemeet-client#gen-api",
+    "migration:generate": "vp run cabbagemeet-server#migration:generate:sqlite",
+    "migration:run": "vp run cabbagemeet-server#migration:run:sqlite",
+    "docker:build": "docker build -t cabbagemeet .",
+    "docker:run": "docker run -p 3001:3001 --env-file server/.env cabbagemeet"
   },
   "devDependencies": {
     "vite-plus": "catalog:"
